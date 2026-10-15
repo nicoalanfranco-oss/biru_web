@@ -532,702 +532,495 @@ button {
 }
 
 /* ==========================================================================
-   BIRU CINEMATIC TV AD SPOT (REAL PHOTO COMMERCIAL HERO)
+   BIRU CINEMATIC /TVADS 3D BURGER ASSEMBLY & STUDIO FREEZE HERO
    ========================================================================== */
-.tvad-hero-container {
+.biru-cinematic-tvad-wrapper {
   position: relative;
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
 
-.tvad-screen-frame {
+.tvad-cinematic-canvas {
   position: relative;
   width: 100%;
-  height: 560px;
-  background: #05080E;
+  max-width: 530px;
+  aspect-ratio: 778 / 804;
   border-radius: var(--radius-xl);
-  border: 1px solid rgba(217, 119, 6, 0.38);
+  border: 1.5px solid rgba(217, 119, 6, 0.45);
   box-shadow: 
     0 24px 60px rgba(0, 0, 0, 0.9),
-    0 0 50px rgba(139, 30, 30, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 0 50px rgba(217, 119, 6, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+  background: #0B0E14;
+  user-select: none;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
-.tvad-screen-frame:hover {
-  border-color: rgba(217, 119, 6, 0.6);
+.tvad-cinematic-canvas:hover {
+  border-color: rgba(217, 119, 6, 0.7);
   box-shadow: 
     0 30px 70px rgba(0, 0, 0, 0.95),
-    0 0 60px rgba(217, 119, 6, 0.35),
+    0 0 60px rgba(217, 119, 6, 0.32),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-/* Efectos Ópticos Cinemáticos de Lente TV */
-.tvad-lens-flare {
-  position: absolute;
-  top: 18%;
-  left: -20%;
-  right: -20%;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(217, 119, 6, 0) 25%, 
-    rgba(245, 158, 11, 0.35) 45%, 
-    rgba(255, 255, 255, 0.7) 50%, 
-    rgba(245, 158, 11, 0.35) 55%, 
-    rgba(217, 119, 6, 0) 75%, 
-    transparent 100%
-  );
-  filter: blur(1px);
-  pointer-events: none;
-  z-index: 20;
-  opacity: 0.65;
-  animation: flarePulse 4s infinite ease-in-out;
-}
-
-@keyframes flarePulse {
-  0%, 100% { opacity: 0.4; transform: translateY(0) scaleX(0.95); }
-  50% { opacity: 0.85; transform: translateY(6px) scaleX(1.05); }
-}
-
-.tvad-vignette-cinematic {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, transparent 35%, rgba(5, 8, 14, 0.65) 80%, rgba(0, 0, 0, 0.92) 100%);
-  pointer-events: none;
-  z-index: 15;
-}
-
-/* OVERLAY BROADCAST / HUD DE GRABACIÓN TV 4K */
-.tvad-broadcast-hud {
-  position: relative;
-  z-index: 25;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 18px 0;
-  pointer-events: none;
-}
-
-.hud-rec-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(11, 14, 20, 0.78);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 5px 12px;
-  border-radius: var(--radius-full);
-}
-
-.rec-blinking-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #EF4444;
-  box-shadow: 0 0 10px #EF4444;
-  animation: blinkRec 1s infinite ease-in-out;
-}
-
-@keyframes blinkRec {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(0.85); }
-}
-
-.rec-text {
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #F3F4F6;
-}
-
-.hud-shot-badge {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(217, 119, 6, 0.2);
-  border: 1px solid rgba(217, 119, 6, 0.45);
-  color: #FCD34D;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  padding: 5px 12px;
-  border-radius: var(--radius-full);
-  backdrop-filter: blur(10px);
-}
-
-/* CÁMARA CINEMÁTICA CON LA FOTOGRAFÍA REAL */
-.tvad-camera-viewport {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  z-index: 5;
-}
-
-.tvad-camera-rig {
+/* Capas Absolutas */
+.tvad-canvas-layer {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  transform-origin: center center;
-  transition: transform 1.9s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
+  pointer-events: none;
 }
 
-.tvad-real-burger-image {
+.tvad-bg-layer {
+  z-index: 1;
+}
+
+.tvad-full-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
-  filter: saturate(1.12) contrast(1.08) brightness(1.03);
-  transform: translateZ(0);
-}
-
-.tvad-real-image-glow-overlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 60%, rgba(217, 119, 6, 0.18) 0%, rgba(139, 30, 30, 0.1) 50%, transparent 80%);
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
-
-/* ATMÓSFERA DE HUMO Y CALOR REAL */
-.tvad-smoke-atmosphere {
-  position: absolute;
-  bottom: 25%;
-  left: 20%;
-  right: 20%;
-  height: 140px;
-  pointer-events: none;
-  z-index: 18;
-}
-
-.smoke-wave {
-  position: absolute;
-  bottom: 0;
-  left: 30%;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, transparent 70%);
-  filter: blur(12px);
-  animation: floatSmoke 3s infinite ease-out;
-}
-
-.smoke-wave.sw1 { left: 25%; animation-delay: 0s; }
-.smoke-wave.sw2 { left: 45%; animation-delay: 1s; width: 80px; height: 80px; }
-.smoke-wave.sw3 { left: 60%; animation-delay: 2s; width: 50px; height: 50px; }
-
-@keyframes floatSmoke {
-  0% { transform: translateY(0) scale(0.6); opacity: 0; }
-  35% { opacity: 0.45; }
-  100% { transform: translateY(-90px) scale(2.2); opacity: 0; }
-}
-
-/* LOWER THIRDS / CAPTION CINEMÁTICO DE CADA TOMA */
-.tvad-shot-caption-overlay {
-  position: absolute;
-  bottom: 74px;
-  left: 20px;
-  max-width: 380px;
-  z-index: 28;
-  background: rgba(11, 14, 20, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(217, 119, 6, 0.35);
-  border-left: 4px solid var(--accent-gold);
-  border-radius: var(--radius-md);
-  padding: 14px 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
-  animation: slideCaptionIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes slideCaptionIn {
-  0% { opacity: 0; transform: translateY(20px) scale(0.95); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.caption-tag-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: var(--accent-gold);
-  margin-bottom: 4px;
-}
-
-.caption-star {
-  color: #F59E0B;
-}
-
-.caption-main-title {
-  font-family: var(--font-brand);
-  font-size: 1.15rem;
-  font-weight: 900;
-  line-height: 1.2;
-  color: #FFFFFF;
-  margin: 0 0 4px;
-}
-
-.caption-sub-description {
-  font-size: 0.78rem;
-  color: var(--text-body);
-  line-height: 1.4;
-  margin: 0;
 }
 
 /* ==========================================================================
-   ESCENA FINAL: LOGO BIRU 3D VOLUMÉTRICO SOBRE LA FOTO REAL
+   ESCENARIO DE DESPIECE & ENSAMBLADO CAPA POR CAPA (DE ABAJO HACIA ARRIBA)
    ========================================================================== */
-.biru-3d-logo-reveal-spot {
+.tvad-assembly-stage {
   position: absolute;
-  top: 14px;
-  right: 18px;
-  z-index: 35;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
+}
+
+.tvad-layer-slice {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* 1. ESTADO: EXPLODED (VISTA DE DESPIECE FLOTANTE EN EL ESPACIO 3D) */
+.state-exploded .slice-plate {
+  transform: translateY(0);
+}
+
+.state-exploded .slice-bun-bottom {
+  transform: translateY(-2%);
+  animation: levitateSlice 3.5s ease-in-out infinite alternate;
+}
+
+.state-exploded .slice-lettuce {
+  transform: translateY(-6%);
+  animation: levitateSlice 3.6s ease-in-out infinite alternate 0.2s;
+}
+
+.state-exploded .slice-patty {
+  transform: translateY(-11%);
+  animation: levitateSlice 3.7s ease-in-out infinite alternate 0.4s;
+}
+
+.state-exploded .slice-bacon {
+  transform: translateY(-16%);
+  animation: levitateSlice 3.8s ease-in-out infinite alternate 0.6s;
+}
+
+.state-exploded .slice-egg {
+  transform: translateY(-22%);
+  animation: levitateSlice 3.9s ease-in-out infinite alternate 0.8s;
+}
+
+.state-exploded .slice-bun-top {
+  transform: translateY(-29%);
+  animation: levitateSlice 4.0s ease-in-out infinite alternate 1.0s;
+}
+
+@keyframes levitateSlice {
+  0% { transform: translateY(var(--lev-base, 0%)) scale(1); }
+  100% { transform: translateY(calc(var(--lev-base, 0%) - 1.5%)) scale(1.01); }
+}
+
+/* 2. ESTADO: ASSEMBLING (ENSAMBLADO SUAVE DE ABAJO HACIA ARRIBA) */
+.state-assembling .slice-plate {
+  transform: translateY(0);
+}
+
+.state-assembling .slice-bun-bottom {
+  transform: translateY(0);
+  transition: transform 0.65s cubic-bezier(0.34, 1.35, 0.64, 1) 0.0s;
+}
+
+.state-assembling .slice-lettuce {
+  transform: translateY(0);
+  transition: transform 0.65s cubic-bezier(0.34, 1.35, 0.64, 1) 0.25s;
+}
+
+.state-assembling .slice-patty {
+  transform: translateY(0);
+  transition: transform 0.7s cubic-bezier(0.34, 1.45, 0.64, 1) 0.55s;
+}
+
+.state-assembling .slice-bacon {
+  transform: translateY(0);
+  transition: transform 0.65s cubic-bezier(0.34, 1.35, 0.64, 1) 0.85s;
+}
+
+.state-assembling .slice-egg {
+  transform: translateY(0);
+  transition: transform 0.72s cubic-bezier(0.34, 1.55, 0.64, 1) 1.15s;
+}
+
+.state-assembling .slice-bun-top {
+  transform: translateY(0);
+  transition: transform 0.78s cubic-bezier(0.34, 1.45, 0.64, 1) 1.45s;
+}
+
+/* 3. ESTADO: SETTLING (ASENTANDO Y COMPACTANDO SUAVEMENTE) */
+.state-settling .slice-plate,
+.state-settling .slice-bun-bottom,
+.state-settling .slice-lettuce,
+.state-settling .slice-patty,
+.state-settling .slice-bacon,
+.state-settling .slice-egg,
+.state-settling .slice-bun-top {
+  transform: translateY(0);
+  transition: transform 0.4s ease;
+}
+
+.state-settling .tvad-assembly-stage {
+  transform: scale(0.99);
+}
+
+/* ==========================================================================
+   4. ESTADO: FROZEN (CONGELADO EN LA COMPOSICIÓN Y ESTÉTICA EXACTA DE LA FOTO)
+   ========================================================================== */
+.tvad-frozen-final-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.is-frozen-hidden {
   opacity: 0;
-  transform: translateY(-20px) scale(0.85);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 
-.biru-3d-logo-reveal-spot.active-reveal {
+.is-frozen-visible {
   opacity: 1;
-  transform: translateY(0) scale(1);
   pointer-events: auto;
 }
 
-.biru-3d-metallic-emblem {
-  position: relative;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  animation: badgeFloat 3.5s ease-in-out infinite alternate;
-}
-
-@keyframes badgeFloat {
-  0% { transform: translateY(0px) rotate(-0.5deg); }
-  100% { transform: translateY(-4px) rotate(0.5deg); }
-}
-
-.emblem-halo-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 220px;
-  height: 120px;
-  background: radial-gradient(ellipse, rgba(217, 119, 6, 0.5) 0%, rgba(139, 30, 30, 0.3) 50%, transparent 80%);
-  filter: blur(24px);
-  z-index: -1;
-  pointer-events: none;
-}
-
-.emblem-gold-bezel {
-  padding: 3px;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #FEF08A 0%, #F59E0B 25%, #92400E 50%, #D97706 75%, #FEF9C3 100%);
-  box-shadow: 
-    0 12px 30px rgba(0, 0, 0, 0.85),
-    0 0 25px rgba(217, 119, 6, 0.45),
-    inset 0 2px 4px rgba(255, 255, 255, 0.5);
-}
-
-.emblem-inner-core {
-  position: relative;
-  padding: 8px 26px 7px;
-  border-radius: 9999px;
-  background: radial-gradient(ellipse at 50% 25%, #1F2937 0%, #111827 65%, #0B0E14 100%);
-  border: 1.5px solid rgba(245, 158, 11, 0.65);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 
-    inset 0 3px 6px rgba(255, 255, 255, 0.2),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.7);
-}
-
-.emblem-est-tag {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  color: #FCD34D;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
-}
-
-.star-icon {
-  color: #F59E0B;
-  font-size: 0.55rem;
-}
-
-.emblem-brand-wordmark {
-  position: relative;
-  overflow: hidden;
-  margin: -4px 0 0px;
-}
-
-.biru-sculpted-3d-text {
-  font-family: 'Outfit', cursive, sans-serif;
-  font-size: 2.35rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  margin: 0;
-  line-height: 1.05;
-  background: linear-gradient(180deg, #FFFFFF 0%, #FEF08A 35%, #F59E0B 75%, #D97706 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 0 #78350F)
-          drop-shadow(0 4px 0 #451A03)
-          drop-shadow(0 6px 1px rgba(0, 0, 0, 0.6))
-          drop-shadow(0 8px 12px rgba(0, 0, 0, 0.9));
-}
-
-.emblem-light-sweep {
+/* Barrido de luz de estudio de alta gama al congelar */
+.frozen-studio-light-sweep {
   position: absolute;
   top: 0;
   left: -100%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent);
   transform: skewX(-25deg);
-  animation: emblemSweep 3.2s infinite ease-in-out;
+  animation: studioLightSweep 4.5s infinite ease-in-out;
   pointer-events: none;
 }
 
-@keyframes emblemSweep {
+@keyframes studioLightSweep {
+  0%, 65% { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* ==========================================================================
+   LOGO BIRU REDISEÑADO EN 3D PROFESIONAL (ESQUINA SUPERIOR DERECHA)
+   ========================================================================== */
+.biru-3d-redesigned-logo {
+  position: absolute;
+  top: 4.8%;
+  right: 4.8%;
+  width: 32%;
+  height: 16.5%;
+  z-index: 12;
+  pointer-events: none;
+  animation: logo3dPop 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes logo3dPop {
+  0% { opacity: 0; transform: scale(0.85) translateY(-10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.logo-3d-bevel-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #FEF08A 0%, #F59E0B 28%, #78350F 55%, #D97706 78%, #FEF9C3 100%);
+  padding: 2.5px;
+  box-shadow: 
+    0 10px 28px rgba(0, 0, 0, 0.9),
+    0 0 30px rgba(217, 119, 6, 0.45),
+    inset 0 1.5px 3px rgba(255, 255, 255, 0.6);
+}
+
+.logo-3d-gold-rim {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: #0B0E14;
+  padding: 2px;
+}
+
+.logo-3d-inner-chamber {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: radial-gradient(ellipse at 50% 25%, #1F2937 0%, #111827 65%, #0B0E14 100%);
+  border: 1px solid rgba(245, 158, 11, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    inset 0 3px 6px rgba(255, 255, 255, 0.22),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+}
+
+.logo-3d-est {
+  font-size: clamp(0.55rem, 1.4vw, 0.72rem);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #FCD34D;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  line-height: 1;
+}
+
+.logo-3d-script-wordmark {
+  font-family: 'Outfit', cursive, sans-serif;
+  font-size: clamp(1.85rem, 4.5vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FEF08A 35%, #F59E0B 75%, #D97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 0 #78350F)
+          drop-shadow(0 3.5px 0 #451A03)
+          drop-shadow(0 5px 1px rgba(0, 0, 0, 0.6))
+          drop-shadow(0 8px 14px rgba(0, 0, 0, 0.95));
+  margin: -2px 0 -1px;
+}
+
+.logo-3d-sub-bar {
+  font-size: clamp(0.48rem, 1.2vw, 0.62rem);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #E2E8F0;
+  border-top: 1px solid rgba(245, 158, 11, 0.35);
+  padding-top: 2px;
+  width: 82%;
+  text-align: center;
+  line-height: 1;
+}
+
+.logo-3d-sheen-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  transform: skewX(-25deg);
+  animation: logoSheen 3.6s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes logoSheen {
   0%, 60% { left: -100%; }
   100% { left: 200%; }
 }
 
-.emblem-delivery-tag {
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.25em;
-  color: #E2E8F0;
-  border-top: 1px solid rgba(245, 158, 11, 0.4);
-  padding-top: 3px;
-  width: 100%;
-  text-align: center;
-}
-
-.emblem-drop-shadow-3d {
-  width: 160px;
-  height: 10px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.8) 0%, transparent 75%);
-  margin-top: 3px;
-  filter: blur(4px);
-}
-
 /* ==========================================================================
-   ESCENA FINAL: PANEL DE TEXTOS Y HORARIOS EN 3D MODERNO
+   TEXTOS INFORMATIVOS EN 3D CON VOLUMEN Y RELIEVE DEFINIDO (IZQUIERDA)
    ========================================================================== */
-.biru-3d-text-showcase-panel {
+.biru-3d-redesigned-typography {
   position: absolute;
-  left: 20px;
-  right: 20px;
-  bottom: 74px;
-  z-index: 32;
+  top: 21%;
+  left: 8%;
+  width: 65%;
+  z-index: 12;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+  gap: 15px;
   pointer-events: none;
+  animation: typo3dSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.biru-3d-text-showcase-panel.active-panel {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
+@keyframes typo3dSlide {
+  0% { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
-.showcase-horarios-header {
-  text-align: left;
-}
-
-.horarios-volumetric-3d-title {
+.typo-3d-horarios {
   font-family: var(--font-brand);
-  font-size: 1.8rem;
+  font-size: clamp(2.6rem, 7.5vw, 4.3rem);
   font-weight: 900;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   color: #FFFFFF;
+  line-height: 0.92;
   margin: 0;
   text-shadow: 
     0 1px 0 #D97706,
     0 2px 0 #B45309,
     0 3px 0 #78350F,
     0 4px 0 #451A03,
-    0 6px 14px rgba(0, 0, 0, 0.9);
+    0 7px 18px rgba(0, 0, 0, 0.95);
 }
 
-.showcase-info-cards-3d {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.info-glass-card-3d {
-  position: relative;
-  background: rgba(11, 14, 20, 0.86);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-md);
-  padding: 8px 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  overflow: hidden;
-  transition: transform 0.25s ease, border-color 0.25s ease;
-}
-
-.info-glass-card-3d:hover {
-  transform: translateY(-2px);
-  border-color: rgba(245, 158, 11, 0.5);
-}
-
-.card-glass-specular {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 45%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
-  pointer-events: none;
-}
-
-.card-icon-pill {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.card-icon-pill.red {
-  background: rgba(139, 30, 30, 0.35);
-  border: 1px solid rgba(139, 30, 30, 0.55);
-  color: #F87171;
-}
-
-.card-icon-pill.green {
-  background: rgba(16, 185, 129, 0.2);
-  border: 1px solid rgba(16, 185, 129, 0.5);
-}
-
-.live-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #10B981;
-  box-shadow: 0 0 10px #10B981;
-  animation: pulseLiveDot 1.5s infinite ease-in-out;
-}
-
-.card-icon-pill.amber {
-  background: rgba(217, 119, 6, 0.25);
-  border: 1px solid rgba(217, 119, 6, 0.5);
-  color: #F59E0B;
-}
-
-.card-meta-text {
+.typo-3d-block {
   display: flex;
   flex-direction: column;
-  min-width: 0;
-}
-
-.card-micro-label {
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.card-bold-value {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--text-white);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-bold-value.green {
-  color: #34D399;
-}
-
-.card-bold-value.amber {
-  color: #FBBF24;
-}
-
-/* DOCK DE CONTACTO 3D */
-.showcase-contact-dock-3d {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.dock-chip-3d {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(11, 14, 20, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #E2E8F0;
-  font-size: 0.74rem;
-  font-weight: 700;
-  padding: 5px 12px;
-  border-radius: var(--radius-full);
-  text-decoration: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-  transition: all var(--transition-fast);
-}
-
-.dock-chip-3d:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent-gold);
   color: #FFFFFF;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
 }
 
-.dock-chip-3d.chip-wpp:hover {
-  border-color: #22C55E;
-  color: #86EFAC;
-  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+.typo-salon .label-dim {
+  font-size: clamp(0.72rem, 2vw, 0.98rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
-.dock-chip-3d.chip-tel:hover {
-  border-color: #38BDF8;
-  color: #BAE6FD;
+.typo-salon .val-bold {
+  font-size: clamp(0.85rem, 2.3vw, 1.15rem);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+.typo-delivery .val-delivery {
+  font-size: clamp(0.85rem, 2.3vw, 1.15rem);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+.typo-delivery u {
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.typo-horario .val-hours {
+  font-size: clamp(0.95rem, 2.6vw, 1.35rem);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #FFFFFF;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
 }
 
 /* ==========================================================================
-   BARRA DE REPRODUCCIÓN DEL SPOT DE TV (TOOLBAR)
+   BARRA DE CONTACTO INFERIOR CALCADA Y MEJORADA EN 3D
    ========================================================================== */
-.tvad-player-toolbar {
-  position: relative;
-  z-index: 38;
+.biru-3d-bottom-contact-bar {
+  position: absolute;
+  bottom: 4.8%;
+  left: 3%;
+  right: 3%;
+  height: 8.5%;
+  z-index: 14;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 18px 14px;
-  background: linear-gradient(180deg, transparent 0%, rgba(5, 8, 14, 0.85) 100%);
-  gap: 12px;
+  justify-content: space-around;
+  padding: 0 10px;
 }
 
-.toolbar-left-controls {
+.contact-chip-3d {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #FFFFFF;
+  text-decoration: none;
+  font-size: clamp(0.82rem, 2.3vw, 1.15rem);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 2px 8px rgba(0, 0, 0, 0.85);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.contact-chip-3d:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  color: #FEF08A;
+}
+
+.contact-chip-3d.wpp:hover {
+  color: #86EFAC;
+}
+
+.contact-chip-3d.phone:hover {
+  color: #BAE6FD;
+}
+
+.chip-ico {
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+}
+
+/* CONTROLES DISCRETOS MINIMALISTAS EN LA ESQUINA */
+.tvad-corner-controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 20;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.player-control-btn {
+.corner-btn-glass {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(10px);
+  gap: 5px;
+  background: rgba(11, 14, 20, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--text-body);
-  font-size: 0.72rem;
+  color: #E2E8F0;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 5px 11px;
+  padding: 4px 10px;
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.player-control-btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--accent-gold);
-  color: #FFFFFF;
-  transform: translateY(-1px);
-}
-
-.player-control-btn.sound-btn.sound-active {
-  background: var(--accent-gold);
-  border-color: var(--accent-gold);
-  color: #000000;
-  box-shadow: 0 0 12px rgba(217, 119, 6, 0.45);
-}
-
-.tvad-timeline-stepper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.timeline-step-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--text-muted);
-  font-size: 0.66rem;
-  font-weight: 800;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.25s ease;
-  padding: 0;
-}
-
-.timeline-step-btn:hover {
+.corner-btn-glass:hover {
+  background: rgba(217, 119, 6, 0.35);
   border-color: var(--accent-gold);
   color: #FFFFFF;
 }
 
-.timeline-step-btn.passed-shot {
-  background: rgba(217, 119, 6, 0.45);
-  color: #FDE68A;
-  border-color: rgba(217, 119, 6, 0.6);
-}
-
-.timeline-step-btn.active-shot {
-  width: 28px;
-  height: 28px;
+.corner-btn-glass.active {
   background: var(--accent-gold);
   color: #000000;
-  border-color: #FEF08A;
-  box-shadow: 0 0 12px rgba(217, 119, 6, 0.6);
-  transform: scale(1.08);
-}
-
-@media (max-width: 900px) {
-  .tvad-screen-frame {
-    height: 480px;
-  }
-
-  .showcase-info-cards-3d {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-
-  .biru-3d-text-showcase-panel {
-    bottom: 65px;
-  }
-
-  .tvad-shot-caption-overlay {
-    bottom: 65px;
-    max-width: calc(100% - 40px);
-  }
+  border-color: var(--accent-gold);
 }
 
 @media (max-width: 900px) {
