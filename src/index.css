@@ -1129,134 +1129,61 @@ button {
 }
 
 /* ==========================================================================
-   BIRU 3D EMBLEM BADGE (REUSABLE RETRO 3D EMBLEM)
+   BIRU LOGO WITH SHEEN (OFFICIAL LOGO + METALLIC SWEEP ANIMATION)
    ========================================================================== */
-.biru-3d-emblem-badge {
+.biru-logo-sheen-wrap {
+  position: relative;
   display: inline-block;
-  user-select: none;
-}
-
-.biru-3d-emblem-badge.size-sm {
-  width: 160px;
-  height: 64px;
-}
-
-.biru-3d-emblem-badge.size-md {
-  width: 210px;
-  height: 82px;
-}
-
-.biru-3d-emblem-badge.size-lg {
-  width: 260px;
-  height: 100px;
-}
-
-.emblem-3d-bevel-frame {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #FEF08A 0%, #F59E0B 28%, #78350F 55%, #D97706 78%, #FEF9C3 100%);
-  padding: 3px;
-  box-shadow: 
-    0 12px 28px rgba(0, 0, 0, 0.75),
-    0 0 28px rgba(217, 119, 6, 0.4),
-    inset 0 1.5px 3px rgba(255, 255, 255, 0.65);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-}
-
-.biru-3d-emblem-badge:hover .emblem-3d-bevel-frame {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 
-    0 16px 36px rgba(0, 0, 0, 0.88),
-    0 0 38px rgba(245, 158, 11, 0.55),
-    inset 0 2px 4px rgba(255, 255, 255, 0.85);
-}
-
-.emblem-3d-gold-rim {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 9999px;
-  background: #0B0E14;
-  padding: 2px;
-}
-
-.emblem-3d-inner-chamber {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 9999px;
-  background: radial-gradient(ellipse at 50% 25%, #1F2937 0%, #111827 65%, #0B0E14 100%);
-  border: 1px solid rgba(245, 158, 11, 0.65);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 
-    inset 0 3px 6px rgba(255, 255, 255, 0.22),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.75);
   overflow: hidden;
+  border-radius: 14px;
+  user-select: none;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.55),
+    0 0 20px rgba(245, 158, 11, 0.18);
 }
 
-.emblem-3d-est {
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  color: #FCD34D;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-  line-height: 1;
+.biru-logo-sheen-wrap:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.72),
+    0 0 32px rgba(245, 158, 11, 0.32);
 }
 
-.size-sm .emblem-3d-est {
-  font-size: 0.52rem;
+.biru-logo-sheen-wrap.size-sm {
+  width: 168px;
 }
 
-.emblem-3d-script-wordmark {
-  font-family: 'Outfit', cursive, sans-serif;
-  font-size: 2.1rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  background: linear-gradient(180deg, #FFFFFF 0%, #FEF08A 35%, #F59E0B 75%, #D97706 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 0 #78350F)
-          drop-shadow(0 3px 0 #451A03)
-          drop-shadow(0 4px 1px rgba(0, 0, 0, 0.6))
-          drop-shadow(0 6px 12px rgba(0, 0, 0, 0.95));
-  margin: -2px 0 -1px;
+.biru-logo-sheen-wrap.size-md {
+  width: 240px;
 }
 
-.size-sm .emblem-3d-script-wordmark {
-  font-size: 1.6rem;
+.biru-logo-sheen-wrap.size-lg {
+  width: 296px;
 }
 
-.emblem-3d-sub-bar {
-  font-size: 0.52rem;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  color: #E2E8F0;
-  border-top: 1px solid rgba(245, 158, 11, 0.35);
-  padding-top: 2px;
-  width: 82%;
-  text-align: center;
-  line-height: 1;
+.biru-logo-sheen-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  pointer-events: none;
 }
 
-.size-sm .emblem-3d-sub-bar {
-  font-size: 0.44rem;
-}
-
-.emblem-3d-sheen-shine {
+.biru-logo-sheen-shine {
   position: absolute;
   top: 0;
   left: -100%;
-  width: 50%;
+  width: 55%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
-  transform: skewX(-25deg);
-  animation: logoSheen 3.6s infinite ease-in-out;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.52) 50%,
+    transparent 70%
+  );
+  transform: skewX(-20deg);
+  animation: logoSheen 4s infinite ease-in-out;
   pointer-events: none;
 }
 

@@ -13,19 +13,16 @@ export const BiruEmblem3D: React.FC<BiruEmblem3DProps> = ({
 }) => {
   return (
     <div
-      className={`biru-3d-emblem-badge size-${size} ${animated ? 'is-animated' : ''} ${className}`}
-      aria-label="Biru Bar y Delivery - Desde 2013"
+      className={`biru-logo-sheen-wrap size-${size} ${animated ? 'is-animated' : ''} ${className}`}
+      aria-label="Biru Bar y Delivery"
     >
-      <div className="emblem-3d-bevel-frame">
-        <div className="emblem-3d-gold-rim">
-          <div className="emblem-3d-inner-chamber">
-            <span className="emblem-3d-est">★ 20 • TBÓ • 13 ★</span>
-            <span className="emblem-3d-script-wordmark">Biru</span>
-            <span className="emblem-3d-sub-bar">BAR &amp; DELIVERY</span>
-            <div className="emblem-3d-sheen-shine" />
-          </div>
-        </div>
-      </div>
+      <img
+        src="/logo_biru.jpg"
+        alt="Biru"
+        className="biru-logo-sheen-img"
+        draggable={false}
+      />
+      {animated && <div className="biru-logo-sheen-shine" />}
     </div>
   );
 };
