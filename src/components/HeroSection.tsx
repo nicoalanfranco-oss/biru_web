@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Utensils, Sparkles, Bike, MapPin, Beer, ArrowRight } from 'lucide-react';
 import { MarcaInfo, TenantInfo } from '../types/food';
+import { BurgerAssemblyAnimation } from './BurgerAssemblyAnimation';
 
 interface HeroSectionProps {
   marca?: MarcaInfo;
@@ -79,20 +80,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreMenu }) => {
             </div>
           </div>
 
-          {/* Lado Imagen Destacada */}
+          {/* Lado Escenario 3D Interactivo: Construcción de Hamburguesa & Logo 3D */}
           <div className={`hero-visual-col ${isLoaded ? 'hero-visual-animate' : ''}`}>
-            <div className="hero-visual-card-biru">
-              <img
-                src="/hero_burger.png"
-                alt="Burger artesanal doble carne Biru"
-                className="hero-image-main"
-              />
-              <div className="hero-card-glow" />
-              <div className="hero-card-floating-badge">
-                <span className="badge-fl-title">🔥 Más Pedida</span>
-                <span className="badge-fl-sub">Burger Doble Carne con Fritas</span>
-              </div>
-            </div>
+            <BurgerAssemblyAnimation onExploreMenu={onExploreMenu} />
           </div>
         </div>
       </div>
