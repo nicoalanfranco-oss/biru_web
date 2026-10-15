@@ -1,0 +1,352 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { ChefHat, Bike, CheckCircle2, Package, X, Paperclip, Loader2 } from 'lucide-react';
+import { FOOD_BACKEND_URL, uploadComprobanteTransferencia } from '../services/api';
+
+type EstadoPedido = 'en_cocina' | 'listo' | 'en_camino' | 'abierto';
+
+interface PedidoActivo {
+  pedido_id: number;
+  numero_orden: number;
+  tipo_pedido: 'delivery' | 'takeaway' | 'salon';
+  estado: EstadoPedido;
+  created_at: string;
+  listo_cocina_at: string | null;
+  metodo_pago?: string;
+  pagado?: boolean;
+  comprobante_url?: string | null;
+  estado_pago?: string;
+}
+
+const ESTADOS_CONFIG: Record<
+  EstadoPedido,
+  { label: string; shortLabel: string; sublabel: string; icon: React.ReactNode; colorClass: string; step: number }
+> = {
+  abierto: {
+    label: 'Pedido recibido',
+    shortLabel: 'Recibido 📦',
+    sublabel: 'Estamos procesando tu orden…',
+    icon: <Package size={18} />,
+    colorClass: 'osb-estado-abierto',
+    step: 0,
+  },
+  en_cocina: {
+    label: 'En cocina 🔥',
+    shortLabel: 'Cocina 🔥',
+    sublabel: 'El equipo de Biru está marchando tu pedido',
+    icon: <ChefHat size={18} />,
+    colorClass: 'osb-estado-cocina',
+    step: 1,
+  },
+  listo: {
+    label: '¡Tu pedido está listo! 🎉',
+    shortLabel: 'Listo 🎉',
+    sublabel: 'Listo en el mostrador o por salir para tu dirección',
+    icon: <CheckCircle2 size={18} />,
+    colorClass: 'osb-estado-listo',
+    step: 2,
+  },
+  en_camino: {
+    label: '¡Tu pedido está en camino! 🛵',
+    shortLabel: 'En camino 🛵',
+    sublabel: 'El repartidor ya salió para tu casa. ¡Llegamos enseguida!',
+    icon: <Bike size={18} />,
+    colorClass: 'osb-estado-camino',
+    step: 3,
+  },
+};
+
+const POLL_INTERVAL_MS = 30_000;
+
+export const OrderStatusBanner: React.FC = () => {
+  const [pedidos, setPedidos] = useState<PedidoActivo[]>([]);
+  const [selectedPedidoId, setSelectedPedidoId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [animatingOut, setAnimatingOut] = useState(false);
+  const [uploadingComprobante, setUploadingComprobante] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevCountRef = useRef<number>(0);
+
+  const getEmail = useCallback((): string | null => {
+    try {
+      const g = localStorage.getItem('biru_google_user');
+      if (!g) return null;
+      const parsed = JSON.parse(g);
+      return parsed?.email || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const getFirstName = useCallback((): string | null => {
+    try {
+      const g = localStorage.getItem('biru_google_user');
+      if (!g) return null;
+      const parsed = JSON.parse(g);
+      const fullName: string = parsed?.name || parsed?.given_name || '';
+      return fullName.split(' ')[0] || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const fetchEstado = useCallback(async () => {
+    const email = getEmail();
+    if (!email) return;
+
+    try {
+      const url = `${FOOD_BACKEND_URL}/api/public/pedido-estado?email=${encodeURIComponent(email)}&tenant_id=6`;
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const lista: PedidoActivo[] = data.pedidos || (data.pedido ? [data.pedido] : []);
+
+      if (lista.length === 0) {
+        if (pedidos.length > 0) {
+          setAnimatingOut(true);
+          setTimeout(() => {
+            setPedidos([]);
+            setSelectedPedidoId(null);
+            setVisible(false);
+            setAnimatingOut(false);
+          }, 500);
+        }
+        return;
+      }
+
+      if (lista.length !== prevCountRef.current) {
+        prevCountRef.current = lista.length;
+        setDismissed(false);
+        setAnimatingOut(false);
+      }
+
+      setPedidos(lista);
+      setSelectedPedidoId(prev => {
+        if (prev && lista.some(p => p.pedido_id === prev)) {
+          return prev;
+        }
+        return lista[0].pedido_id;
+      });
+      setVisible(true);
+    } catch {
+      // Ignorar errores de conexión transitorios
+    } finally {
+      setLoading(false);
+    }
+  }, [getEmail, pedidos.length]);
+
+  useEffect(() => {
+    const email = getEmail();
+    if (!email) return;
+
+    setLoading(true);
+    fetchEstado();
+
+    intervalRef.current = setInterval(fetchEstado, POLL_INTERVAL_MS);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [fetchEstado, getEmail]);
+
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === 'biru_google_user') {
+        if (e.newValue) {
+          setLoading(true);
+          fetchEstado();
+          if (!intervalRef.current) {
+            intervalRef.current = setInterval(fetchEstado, POLL_INTERVAL_MS);
+          }
+        } else {
+          setPedidos([]);
+          setSelectedPedidoId(null);
+          setVisible(false);
+          if (intervalRef.current) clearInterval(intervalRef.current);
+        }
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, [fetchEstado]);
+
+  useEffect(() => {
+    const handler = () => {
+      setLoading(true);
+      fetchEstado();
+      if (!intervalRef.current) {
+        intervalRef.current = setInterval(fetchEstado, POLL_INTERVAL_MS);
+      }
+    };
+    window.addEventListener('biru:google-login', handler);
+    return () => window.removeEventListener('biru:google-login', handler);
+  }, [fetchEstado]);
+
+  const handleDismiss = () => {
+    setAnimatingOut(true);
+    setTimeout(() => {
+      setDismissed(true);
+      setAnimatingOut(false);
+    }, 400);
+  };
+
+  const currentPedido = pedidos.find(p => p.pedido_id === selectedPedidoId) || pedidos[0];
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentPedido) return;
+
+    setUploadingComprobante(true);
+    const res = await uploadComprobanteTransferencia(currentPedido.pedido_id, file);
+    setUploadingComprobante(false);
+
+    if (res.success && res.comprobante_url) {
+      setPedidos(prev =>
+        prev.map(p =>
+          p.pedido_id === currentPedido.pedido_id
+            ? { ...p, comprobante_url: res.comprobante_url }
+            : p
+        )
+      );
+    }
+  };
+
+  if (!getEmail() || pedidos.length === 0 || dismissed || !visible || !currentPedido) {
+    return null;
+  }
+
+  const config = ESTADOS_CONFIG[currentPedido.estado] ?? ESTADOS_CONFIG.en_cocina;
+  const totalSteps = currentPedido.tipo_pedido === 'delivery' ? 3 : 2;
+  const currentStep = Math.min(config.step, totalSteps);
+
+  const stepLabels =
+    currentPedido.tipo_pedido === 'delivery'
+      ? ['Recibido', 'En cocina', 'Listo', 'En camino']
+      : ['Recibido', 'En cocina', 'Listo'];
+
+  return (
+    <div
+      className={`osb-wrapper ${config.colorClass} ${animatingOut ? 'osb-slide-out' : 'osb-slide-in'}`}
+      role="status"
+      aria-live="polite"
+    >
+      {pedidos.length > 1 && (
+        <div className="osb-multi-header">
+          <span className="osb-multi-title">Tus pedidos en curso ({pedidos.length}):</span>
+          <div className="osb-multi-chips">
+            {pedidos.map(p => {
+              const pCfg = ESTADOS_CONFIG[p.estado] ?? ESTADOS_CONFIG.en_cocina;
+              const isSelected = p.pedido_id === currentPedido.pedido_id;
+              return (
+                <button
+                  key={p.pedido_id}
+                  type="button"
+                  onClick={() => setSelectedPedidoId(p.pedido_id)}
+                  className={`osb-chip ${isSelected ? 'osb-chip-active' : ''} ${pCfg.colorClass}`}
+                >
+                  <span className="osb-chip-order">#{p.numero_orden}</span>
+                  <span className="osb-chip-status">{pCfg.shortLabel}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="osb-inner">
+        <div className="osb-left">
+          <div className="osb-icon-pulse">
+            {config.icon}
+          </div>
+          <div className="osb-texts">
+            <div className="osb-header-meta">
+              <span className="osb-orden">#{currentPedido.numero_orden}{getFirstName() ? ` · ${getFirstName()}` : ''}</span>
+              <span className="osb-tipo-badge">
+                {currentPedido.tipo_pedido === 'delivery' ? 'Delivery 🛵' : 'Take Away 🛍️'}
+              </span>
+              {currentPedido.metodo_pago === 'transferencia' && (
+                <div className="osb-comprobante-wrapper">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*,.pdf"
+                    style={{ display: 'none' }}
+                    onChange={handleFileChange}
+                  />
+                  {uploadingComprobante ? (
+                    <span className="osb-comprobante-loading">
+                      <Loader2 size={12} className="osb-spin" /> Subiendo...
+                    </span>
+                  ) : currentPedido.comprobante_url ? (
+                    <div className="osb-comprobante-ok">
+                      <a
+                        href={currentPedido.comprobante_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="osb-comprobante-link"
+                        title="Ver comprobante adjuntado"
+                      >
+                        <Paperclip size={12} />
+                        <span>Comprobante ✓</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="osb-comprobante-change"
+                        title="Cambiar archivo"
+                      >
+                        Cambiar
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="osb-comprobante-btn"
+                      title="Adjuntar comprobante de transferencia"
+                    >
+                      <Paperclip size={12} />
+                      <span>Adjuntar comprobante</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            <span className="osb-label">{config.label}</span>
+            <span className="osb-sublabel">{config.sublabel}</span>
+          </div>
+        </div>
+
+        <div className="osb-progress-container">
+          <div className="osb-steps">
+            {stepLabels.map((label, idx) => (
+              <div key={idx} className={`osb-step ${idx <= currentStep ? 'osb-step-done' : ''} ${idx === currentStep ? 'osb-step-active' : ''}`}>
+                <div className="osb-step-dot">
+                  {idx < currentStep && <CheckCircle2 size={10} />}
+                  {idx === currentStep && <div className="osb-step-pulse" />}
+                </div>
+                <span className="osb-step-label">{label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="osb-progress-bar-track">
+            <div
+              className="osb-progress-bar-fill"
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        <button
+          className="osb-close"
+          onClick={handleDismiss}
+          aria-label="Cerrar seguimiento"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    </div>
+  );
+};
