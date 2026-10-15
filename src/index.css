@@ -1129,62 +1129,67 @@ button {
 }
 
 /* ==========================================================================
-   BIRU LOGO WITH SHEEN (OFFICIAL LOGO + METALLIC SWEEP ANIMATION)
+   BIRU LOGO CIRCLE (EXACT NAVBAR STYLE — LARGER + METALLIC SHEEN)
    ========================================================================== */
-.biru-logo-sheen-wrap {
+.biru-logo-circle-wrap {
   position: relative;
   display: inline-block;
+  border-radius: 50%;
   overflow: hidden;
-  border-radius: 14px;
   user-select: none;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  border: 3px solid var(--accent-gold);
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.55),
-    0 0 20px rgba(245, 158, 11, 0.18);
+    0 0 22px rgba(217, 119, 6, 0.45),
+    0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
-.biru-logo-sheen-wrap:hover {
-  transform: translateY(-3px) scale(1.03);
+.biru-logo-circle-wrap:hover {
+  transform: translateY(-3px) scale(1.06);
   box-shadow:
-    0 14px 36px rgba(0, 0, 0, 0.72),
-    0 0 32px rgba(245, 158, 11, 0.32);
+    0 0 36px rgba(245, 158, 11, 0.65),
+    0 12px 32px rgba(0, 0, 0, 0.75);
 }
 
-.biru-logo-sheen-wrap.size-sm {
-  width: 168px;
+.biru-logo-circle-wrap.size-sm {
+  width: 72px;
+  height: 72px;
 }
 
-.biru-logo-sheen-wrap.size-md {
-  width: 240px;
+.biru-logo-circle-wrap.size-md {
+  width: 100px;
+  height: 100px;
 }
 
-.biru-logo-sheen-wrap.size-lg {
-  width: 296px;
+.biru-logo-circle-wrap.size-lg {
+  width: 128px;
+  height: 128px;
 }
 
-.biru-logo-sheen-img {
+.biru-logo-circle-img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: cover;
   pointer-events: none;
 }
 
-.biru-logo-sheen-shine {
+.biru-logo-circle-shine {
   position: absolute;
   top: 0;
   left: -100%;
-  width: 55%;
+  width: 60%;
   height: 100%;
   background: linear-gradient(
     105deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.52) 50%,
-    transparent 70%
+    transparent 25%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 75%
   );
-  transform: skewX(-20deg);
+  transform: skewX(-15deg);
   animation: logoSheen 4s infinite ease-in-out;
   pointer-events: none;
+  border-radius: 50%;
 }
 
 .menu-title-group {
