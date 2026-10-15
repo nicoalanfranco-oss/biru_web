@@ -282,7 +282,7 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
 
             {/* Insignia Biru 3D alineada a la derecha */}
             <div className="menu-header-emblem-wrap">
-              <BiruEmblem3D size="md" />
+              <BiruEmblem3D size="lg" />
             </div>
           </div>
 

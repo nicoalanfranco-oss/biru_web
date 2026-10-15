@@ -1157,13 +1157,13 @@ button {
 }
 
 .biru-logo-circle-wrap.size-md {
-  width: 100px;
-  height: 100px;
+  width: 140px;
+  height: 140px;
 }
 
 .biru-logo-circle-wrap.size-lg {
-  width: 128px;
-  height: 128px;
+  width: 170px;
+  height: 170px;
 }
 
 .biru-logo-circle-img {
@@ -1513,9 +1513,11 @@ button {
 .story-watermark-block {
   display: flex;
   justify-content: flex-end;
+  align-items: flex-start;
 }
 
-.story-watermark-block img {
+/* legacy fallback if raw img is used */
+.story-watermark-block > img {
   width: 140px;
   height: 140px;
   border-radius: 50%;

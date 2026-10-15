@@ -1,33 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Flame, Beer, Heart, Sparkles, MapPin, Music } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { BiruEmblem3D } from './BiruEmblem3D';
 
 export const StoryCultureSection: React.FC = () => {
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.1 });
 
   const photos = [
     {
-      url: '/hero_exterior_noche.png',
+      url: '/hero_exterior_noche.jpg',
       caption: 'Nuestra esquina en Catalina 98: luces cálidas, deck de madera y noche de bar',
     },
     {
-      url: '/pizza_masa_madre.png',
+      url: '/pizza_masa_madre.jpg',
       caption: 'Pizzas artesanales elaboradas 100% con masa madre de fermentación natural',
     },
     {
-      url: '/barra_retro.png',
-      caption: 'La barra retro de madera con banquetas clásicas y cervezas heladas',
-    },
-    {
-      url: '/interior_ladrillo.png',
+      url: '/interior_ladrillo.jpg',
       caption: 'Mística rock & roll: cuadros de vinilos, ladrillo visto y buena energía',
     },
     {
-      url: '/interior_salon.png',
+      url: '/interior_salon.jpg',
       caption: 'El salón interior para compartir las mejores charlas y platos con amigos',
     },
     {
-      url: '/heladeras_vintage.png',
+      url: '/heladeras_vintage.jpg',
       caption: 'Colección de botellas y heladeras vintage: lo que importa es lo de adentro',
     },
   ];
@@ -90,9 +87,9 @@ export const StoryCultureSection: React.FC = () => {
             </p>
           </div>
 
-          {/* Logo en marca de agua */}
+          {/* Logo con sheen — mismo efecto que el logo del menú */}
           <div className="story-watermark-block">
-            <img src="/logo_biru.jpg" alt="Biru" aria-hidden="true" />
+            <BiruEmblem3D size="lg" animated={true} />
           </div>
 
           {/* Grid de Valores */}

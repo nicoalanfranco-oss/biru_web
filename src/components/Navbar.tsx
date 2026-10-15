@@ -66,7 +66,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 alt="Biru Bar & Delivery"
                 className="navbar-logo"
               />
-              <span className="navbar-brand-name">Biru</span>
             </a>
             <div className="navbar-badges-group">
               <span className="navbar-location-badge">
