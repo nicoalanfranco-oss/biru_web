@@ -41,7 +41,15 @@ export const Footer: React.FC<FooterProps> = ({ marca, tenant }) => {
           <div className="footer-details-grid">
             <div className="footer-detail-item">
               <MapPin size={16} className="footer-icon" />
-              <span>{tenant?.direccion || 'Dr. Domingo Catalina 98'}, Tacuarembó</span>
+              <a
+                href={tenant?.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent((tenant?.direccion || 'Dr. Domingo Catalina 98') + ', Tacuarembó, Uruguay')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-maps-link"
+                title="Ver en Google Maps"
+              >
+                {tenant?.direccion || 'Dr. Domingo Catalina 98'}, Tacuarembó
+              </a>
             </div>
             <div className="footer-detail-item">
               <Phone size={16} className="footer-icon" />

@@ -68,9 +68,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               />
             </a>
             <div className="navbar-badges-group">
-              <span className="navbar-location-badge">
-                <MapPin size={11} /> Catalina 98
-              </span>
+              <a
+                href={tenant?.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent((tenant?.direccion || 'Dr. Domingo Catalina 98') + ', Tacuarembó, Uruguay')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="navbar-location-badge navbar-location-link"
+                title={`Ver en Google Maps: ${tenant?.direccion || 'Dr. Domingo Catalina 98'}`}
+              >
+                <MapPin size={11} />
+                {/* Dirección abreviada: solo el número de calle */}
+                {tenant?.direccion
+                  ? tenant.direccion.replace(/^(Dr\.?\s?Domingo\s?)?/i, '').trim()
+                  : 'Catalina 98'}
+              </a>
               <span className="navbar-schedule-badge">
                 <Clock size={11} />
                 <span className="schedule-days-text">{marca.dias_atencion || 'Mar a Dom'}: </span>{marca.horario_atencion || '19:30 a 01:00 hs'}

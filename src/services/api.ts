@@ -7,6 +7,7 @@ export const TENANT_INFO: TenantInfo = {
   rut: realData.tenant?.rut || '15151561651616',
   direccion: realData.tenant?.direccion || 'Dr. Domingo Catalina 98',
   telefono: realData.tenant?.telefono || '092 033 390 / 4632 5415',
+  google_maps_url: (realData.tenant as any)?.google_maps_url || 'https://maps.google.com/?q=Dr.+Domingo+Catalina+98+Tacuarembo+Uruguay',
   email: realData.tenant?.email || 'contacto@birubartbo.uy',
 };
 
@@ -37,6 +38,7 @@ function parseTenantFromBackend(t: any): TenantInfo {
     rut: t.rut || TENANT_INFO.rut,
     direccion: t.direccion || TENANT_INFO.direccion,
     telefono: t.telefono || TENANT_INFO.telefono,
+    google_maps_url: t.google_maps_url || TENANT_INFO.google_maps_url,
     email: t.email || TENANT_INFO.email,
   };
 }

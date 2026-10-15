@@ -292,6 +292,30 @@ button {
   font-weight: 700;
 }
 
+/* Dirección cliqueable → Google Maps */
+.navbar-location-link {
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.navbar-location-link:hover {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.footer-maps-link {
+  color: var(--text-body);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-maps-link:hover {
+  color: var(--accent-gold);
+  text-decoration: underline;
+}
+
 .navbar-actions {
   display: flex;
   align-items: center;
