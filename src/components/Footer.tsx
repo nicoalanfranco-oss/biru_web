@@ -2,20 +2,27 @@ import React from 'react';
 import { MarcaInfo, TenantInfo } from '../types/food';
 import { MapPin, Phone, Clock } from 'lucide-react';
 
-const InstagramIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+/* Instagram brand icon con gradiente oficial */
+const InstagramIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
   <svg
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
+    xmlns="http://www.w3.org/2000/svg"
   >
-    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    <defs>
+      <radialGradient id="ig-grad" cx="30%" cy="107%" r="150%">
+        <stop offset="0%" stopColor="#fdf497" />
+        <stop offset="5%" stopColor="#fdf497" />
+        <stop offset="45%" stopColor="#fd5949" />
+        <stop offset="60%" stopColor="#d6249f" />
+        <stop offset="90%" stopColor="#285AEB" />
+      </radialGradient>
+    </defs>
+    <rect x="2" y="2" width="20" height="20" rx="5.5" ry="5.5" fill="url(#ig-grad)" />
+    <circle cx="12" cy="12" r="4.5" stroke="white" strokeWidth="1.8" fill="none" />
+    <circle cx="17.5" cy="6.5" r="1.2" fill="white" />
   </svg>
 );
 
@@ -66,14 +73,19 @@ export const Footer: React.FC<FooterProps> = ({ marca, tenant }) => {
                 rel="noreferrer"
                 className="footer-instagram-link"
               >
-                <InstagramIcon size={16} />
-                <span>@birubartbo en Instagram</span>
+                <span className="footer-instagram-icon-wrap">
+                  <InstagramIcon size={22} />
+                </span>
+                <span className="footer-instagram-text">
+                  <span className="footer-instagram-handle">@birubartbo</span>
+                  <span className="footer-instagram-sub">Seguinos en Instagram</span>
+                </span>
               </a>
             </div>
           </div>
         </div>
 
-        {/* Nico Labs Developer Badge */}
+        {/* Nico Labs Developer Badge — premium */}
         <div className="footer-nicolabs-container">
           <a
             href="https://nicolabs.nico-family.com/"
@@ -82,12 +94,14 @@ export const Footer: React.FC<FooterProps> = ({ marca, tenant }) => {
             className="footer-nicolabs-link"
             title="Desarrollado y Creado por Nico Labs"
           >
-            <span className="footer-nicolabs-created">Creado por</span>
-            <img
-              src="/logo_nicolabs.png"
-              alt="Nico Labs"
-              className="footer-nicolabs-logo"
-            />
+            <div className="footer-nicolabs-badge">
+              <span className="footer-nicolabs-label">Tecnología por</span>
+              <img
+                src="/logo_nicolabs.png"
+                alt="Nico Labs"
+                className="footer-nicolabs-logo"
+              />
+            </div>
           </a>
         </div>
       </div>

@@ -16,6 +16,10 @@ export const StoryCultureSection: React.FC = () => {
       caption: 'Pizzas artesanales elaboradas 100% con masa madre de fermentación natural',
     },
     {
+      url: '/barra_retro.jpg',
+      caption: 'La barra retro de madera con banquetas clásicas y cervezas heladas',
+    },
+    {
       url: '/interior_ladrillo.jpg',
       caption: 'Mística rock & roll: cuadros de vinilos, ladrillo visto y buena energía',
     },
