@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Utensils, Sparkles, Bike, MapPin, Beer, ArrowRight } from 'lucide-react';
 import { MarcaInfo, TenantInfo } from '../types/food';
-import { BurgerAssemblyAnimation } from './BurgerAssemblyAnimation';
+import { HeroVideoShowcase } from './HeroVideoShowcase';
 
 interface HeroSectionProps {
   marca?: MarcaInfo;
@@ -80,9 +80,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreMenu }) => {
             </div>
           </div>
 
-          {/* Lado Escenario 3D Interactivo: Construcción de Hamburguesa & Logo 3D */}
+          {/* Lado Video Spot Cinematográfico Ligero */}
           <div className={`hero-visual-col ${isLoaded ? 'hero-visual-animate' : ''}`}>
-            <BurgerAssemblyAnimation onExploreMenu={onExploreMenu} />
+            <HeroVideoShowcase onExploreMenu={onExploreMenu} />
           </div>
         </div>
       </div>

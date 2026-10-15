@@ -3,6 +3,7 @@ import { Plus, Sparkles, Eye, Search, Utensils } from 'lucide-react';
 import { ProductoElaborado, ProductoReventa, GrupoOpciones } from '../types/food';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { DishDetailModal } from './DishDetailModal';
+import { BiruEmblem3D } from './BiruEmblem3D';
 import { triggerHaptic } from '../utils/haptics';
 
 interface MenuSectionProps {
@@ -266,16 +267,23 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
   return (
     <section id="menu" className="menu-section">
       <div className="page-container">
-        {/* Cabecera de la carta */}
+        {/* Cabecera de la carta con Insignia 3D Biru */}
         <div className="menu-header">
-          <div className="menu-title-group">
-            <span className="badge-tag red">
-              <Utensils size={14} /> LA CARTA BIRU
-            </span>
-            <h2 className="menu-main-title">Elegí lo que más te tienta</h2>
-            <p className="menu-subtitle">
-              Burgers artesanales, pizzas de masa madre, tablas para picar, chivitos y cerveza helada.
-            </p>
+          <div className="menu-header-top-row">
+            <div className="menu-title-group">
+              <span className="badge-tag red">
+                <Utensils size={14} /> LA CARTA BIRU
+              </span>
+              <h2 className="menu-main-title">Elegí lo que más te tienta</h2>
+              <p className="menu-subtitle">
+                Burgers artesanales, pizzas de masa madre, tablas para picar, chivitos y cerveza helada.
+              </p>
+            </div>
+
+            {/* Insignia Biru 3D alineada a la derecha */}
+            <div className="menu-header-emblem-wrap">
+              <BiruEmblem3D size="md" />
+            </div>
           </div>
 
           {/* Buscador interactivo */}
