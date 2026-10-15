@@ -532,184 +532,66 @@ button {
 }
 
 /* ==========================================================================
-   BIRU CINEMATIC HERO VIDEO SHOWCASE (1.45 MB OPTIMIZED, FASTSTART, NO WATERMARK)
+   BIRU CINEMATIC FLOATING HERO VIDEO (SIN MARCOS NI ACCESORIOS, INTEGRADO)
    ========================================================================== */
-.hero-video-showcase-container {
+.hero-floating-video-wrapper {
   position: relative;
   width: 100%;
-  max-width: 580px;
+  max-width: 620px;
   margin: 0 auto;
-  perspective: 1000px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: heroVideoFloat 6s ease-in-out infinite;
 }
 
-.hero-video-bezel-frame {
+@keyframes heroVideoFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(0.4deg);
+  }
+}
+
+.hero-floating-video-glow {
+  position: absolute;
+  width: 90%;
+  height: 90%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, rgba(220, 38, 38, 0.12) 50%, transparent 75%);
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-floating-video-canvas {
   position: relative;
-  background: linear-gradient(145deg, #181D28, #0B0E14);
-  border: 1.5px solid rgba(245, 158, 11, 0.4);
-  border-radius: 20px;
-  padding: 12px;
-  box-shadow: 
-    0 24px 60px rgba(0, 0, 0, 0.88),
-    0 0 45px rgba(217, 119, 6, 0.24),
-    inset 0 1px 1.5px rgba(255, 255, 255, 0.16);
-  overflow: hidden;
-  transition: all 0.35s ease;
-}
-
-.hero-video-bezel-frame:hover {
-  border-color: rgba(245, 158, 11, 0.75);
-  box-shadow: 
-    0 30px 75px rgba(0, 0, 0, 0.95),
-    0 0 60px rgba(217, 119, 6, 0.38),
-    inset 0 1px 2px rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
-}
-
-.hero-video-top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 2px 6px 10px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.hero-video-live-tag {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #FCD34D;
-}
-
-.hero-video-live-tag .live-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #EF4444;
-  box-shadow: 0 0 8px #EF4444;
-  animation: pulse 1.8s infinite;
-}
-
-.hero-video-edition-tag {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #94A3B8;
-  font-size: 0.68rem;
-}
-
-.tag-sparkle {
-  color: #F59E0B;
-}
-
-.hero-video-canvas {
-  position: relative;
+  z-index: 1;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 12px;
+  border-radius: 36px;
   overflow: hidden;
-  background: #000;
-  cursor: pointer;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+  background: transparent;
+  /* Fundido suave perimetral para integrarse al fondo oscuro de la hero */
+  -webkit-mask-image: radial-gradient(ellipse 95% 90% at 50% 50%, black 72%, transparent 100%);
+  mask-image: radial-gradient(ellipse 95% 90% at 50% 50%, black 72%, transparent 100%);
 }
 
-.hero-video-element {
+.hero-floating-video-element {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.hero-video-vignette {
+.hero-floating-edge-fade {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle at center, transparent 65%, rgba(0, 0, 0, 0.45) 100%);
-}
-
-.hero-video-play-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(3px);
-}
-
-.hero-video-big-play-btn {
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  background: rgba(15, 23, 42, 0.9);
-  border: 2px solid #F59E0B;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 30px rgba(245, 158, 11, 0.6);
-  cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  padding-left: 4px;
-}
-
-.hero-video-big-play-btn:hover {
-  transform: scale(1.12);
-  background: #1E293B;
-  border-color: #FCD34D;
-}
-
-.hero-video-controls-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 4px 4px;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.controls-left, .controls-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ctrl-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 13px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9px;
-  color: #E2E8F0;
-  font-size: 0.74rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.ctrl-btn:hover {
-  background: rgba(245, 158, 11, 0.18);
-  border-color: rgba(245, 158, 11, 0.5);
-  color: #FCD34D;
-  transform: translateY(-1px);
-}
-
-.ctrl-btn.order-cta {
-  background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
-  border-color: #EF4444;
-  color: #FFFFFF;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
-}
-
-.ctrl-btn.order-cta:hover {
-  background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%);
-  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.5);
-  transform: translateY(-1px);
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(11, 14, 20, 0.45) 100%);
 }
 
 /* ==========================================================================
