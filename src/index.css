@@ -532,520 +532,435 @@ button {
 }
 
 /* ==========================================================================
-   BURGER HERO 3D EXPERIENCE & ASSEMBLE ANIMATION
+   BIRU CINEMATIC TV AD SPOT (REAL PHOTO COMMERCIAL HERO)
    ========================================================================== */
-.burger-hero-experience-wrapper {
+.tvad-hero-container {
   position: relative;
   width: 100%;
 }
 
-.burger-hero-stage {
+.tvad-screen-frame {
   position: relative;
-  background: radial-gradient(circle at 50% 30%, #1a2232 0%, #0d121c 65%, #080b12 100%);
+  width: 100%;
+  height: 560px;
+  background: #05080E;
   border-radius: var(--radius-xl);
-  border: 1px solid rgba(217, 119, 6, 0.28);
+  border: 1px solid rgba(217, 119, 6, 0.38);
   box-shadow: 
-    0 20px 50px rgba(0, 0, 0, 0.75),
-    0 0 40px rgba(139, 30, 30, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  padding: 24px 20px 20px;
+    0 24px 60px rgba(0, 0, 0, 0.9),
+    0 0 50px rgba(139, 30, 30, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   overflow: hidden;
-  transition: transform 0.25s ease-out, box-shadow 0.3s ease;
-  transform-style: preserve-3d;
-  min-height: 520px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
-.burger-hero-stage:hover {
+.tvad-screen-frame:hover {
+  border-color: rgba(217, 119, 6, 0.6);
   box-shadow: 
-    0 24px 60px rgba(0, 0, 0, 0.85),
-    0 0 50px rgba(217, 119, 6, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 30px 70px rgba(0, 0, 0, 0.95),
+    0 0 60px rgba(217, 119, 6, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-/* Luces Ambientales Volumétricas */
-.stage-light-ambient {
+/* Efectos Ópticos Cinemáticos de Lente TV */
+.tvad-lens-flare {
   position: absolute;
-  top: -60px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 320px;
-  height: 220px;
-  background: radial-gradient(ellipse, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.05) 50%, transparent 80%);
-  filter: blur(40px);
+  top: 18%;
+  left: -20%;
+  right: -20%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(217, 119, 6, 0) 25%, 
+    rgba(245, 158, 11, 0.35) 45%, 
+    rgba(255, 255, 255, 0.7) 50%, 
+    rgba(245, 158, 11, 0.35) 55%, 
+    rgba(217, 119, 6, 0) 75%, 
+    transparent 100%
+  );
+  filter: blur(1px);
   pointer-events: none;
-  z-index: 1;
+  z-index: 20;
+  opacity: 0.65;
+  animation: flarePulse 4s infinite ease-in-out;
 }
 
-.stage-light-rim-gold {
-  position: absolute;
-  top: 15%;
-  right: -40px;
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(217, 119, 6, 0.2) 0%, transparent 70%);
-  filter: blur(50px);
-  pointer-events: none;
-  z-index: 1;
+@keyframes flarePulse {
+  0%, 100% { opacity: 0.4; transform: translateY(0) scaleX(0.95); }
+  50% { opacity: 0.85; transform: translateY(6px) scaleX(1.05); }
 }
 
-.stage-light-rim-crimson {
+.tvad-vignette-cinematic {
   position: absolute;
-  bottom: 10%;
-  left: -40px;
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(139, 30, 30, 0.28) 0%, transparent 70%);
-  filter: blur(50px);
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 35%, rgba(5, 8, 14, 0.65) 80%, rgba(0, 0, 0, 0.92) 100%);
   pointer-events: none;
-  z-index: 1;
+  z-index: 15;
 }
 
-/* Partículas de Vapor Animadas */
-.burger-steam-particles {
-  position: absolute;
-  top: 130px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 140px;
-  height: 100px;
-  pointer-events: none;
+/* OVERLAY BROADCAST / HUD DE GRABACIÓN TV 4K */
+.tvad-broadcast-hud {
+  position: relative;
   z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 0;
+  pointer-events: none;
 }
 
-.steam-puff {
+.hud-rec-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(11, 14, 20, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+}
+
+.rec-blinking-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #EF4444;
+  box-shadow: 0 0 10px #EF4444;
+  animation: blinkRec 1s infinite ease-in-out;
+}
+
+@keyframes blinkRec {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.85); }
+}
+
+.rec-text {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #F3F4F6;
+}
+
+.hud-shot-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(217, 119, 6, 0.2);
+  border: 1px solid rgba(217, 119, 6, 0.45);
+  color: #FCD34D;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(10px);
+}
+
+/* CÁMARA CINEMÁTICA CON LA FOTOGRAFÍA REAL */
+.tvad-camera-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.tvad-camera-rig {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
+  transition: transform 1.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.tvad-real-burger-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  filter: saturate(1.12) contrast(1.08) brightness(1.03);
+  transform: translateZ(0);
+}
+
+.tvad-real-image-glow-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 60%, rgba(217, 119, 6, 0.18) 0%, rgba(139, 30, 30, 0.1) 50%, transparent 80%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* ATMÓSFERA DE HUMO Y CALOR REAL */
+.tvad-smoke-atmosphere {
+  position: absolute;
+  bottom: 25%;
+  left: 20%;
+  right: 20%;
+  height: 140px;
+  pointer-events: none;
+  z-index: 18;
+}
+
+.smoke-wave {
   position: absolute;
   bottom: 0;
-  width: 18px;
-  height: 18px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 70%);
+  left: 30%;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  filter: blur(6px);
-  animation: riseSteam 2.2s infinite ease-out;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, transparent 70%);
+  filter: blur(12px);
+  animation: floatSmoke 3s infinite ease-out;
 }
 
-.steam-puff.p1 { left: 25%; animation-delay: 0s; }
-.steam-puff.p2 { left: 45%; animation-delay: 0.6s; width: 22px; height: 22px; }
-.steam-puff.p3 { left: 65%; animation-delay: 1.2s; width: 16px; height: 16px; }
-.steam-puff.p4 { left: 35%; animation-delay: 1.7s; width: 20px; height: 20px; }
+.smoke-wave.sw1 { left: 25%; animation-delay: 0s; }
+.smoke-wave.sw2 { left: 45%; animation-delay: 1s; width: 80px; height: 80px; }
+.smoke-wave.sw3 { left: 60%; animation-delay: 2s; width: 50px; height: 50px; }
 
-@keyframes riseSteam {
-  0% {
-    transform: translateY(0) scale(0.6);
-    opacity: 0;
-  }
-  30% {
-    opacity: 0.6;
-  }
-  70% {
-    opacity: 0.3;
-  }
-  100% {
-    transform: translateY(-80px) scale(2.4) translateX(12px);
-    opacity: 0;
-  }
+@keyframes floatSmoke {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  35% { opacity: 0.45; }
+  100% { transform: translateY(-90px) scale(2.2); opacity: 0; }
+}
+
+/* LOWER THIRDS / CAPTION CINEMÁTICO DE CADA TOMA */
+.tvad-shot-caption-overlay {
+  position: absolute;
+  bottom: 74px;
+  left: 20px;
+  max-width: 380px;
+  z-index: 28;
+  background: rgba(11, 14, 20, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  border-left: 4px solid var(--accent-gold);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+  animation: slideCaptionIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideCaptionIn {
+  0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.caption-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--accent-gold);
+  margin-bottom: 4px;
+}
+
+.caption-star {
+  color: #F59E0B;
+}
+
+.caption-main-title {
+  font-family: var(--font-brand);
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1.2;
+  color: #FFFFFF;
+  margin: 0 0 4px;
+}
+
+.caption-sub-description {
+  font-size: 0.78rem;
+  color: var(--text-body);
+  line-height: 1.4;
+  margin: 0;
 }
 
 /* ==========================================================================
-   LOGO BIRU REDISEÑADO EN 3D MODERNO
+   ESCENA FINAL: LOGO BIRU 3D VOLUMÉTRICO SOBRE LA FOTO REAL
    ========================================================================== */
-.biru-3d-logo-overlay {
-  position: relative;
-  z-index: 40;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 8px;
+.biru-3d-logo-reveal-spot {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 35;
   opacity: 0;
-  transform: translateY(-24px) scale(0.92);
+  transform: translateY(-20px) scale(0.85);
   transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 
-.biru-3d-logo-overlay.logo-visible-3d {
+.biru-3d-logo-reveal-spot.active-reveal {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
 }
 
-.biru-3d-emblem-container {
+.biru-3d-metallic-emblem {
   position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  animation: badgeFloatAmbient 4s ease-in-out infinite alternate;
+  animation: badgeFloat 3.5s ease-in-out infinite alternate;
 }
 
-@keyframes badgeFloatAmbient {
+@keyframes badgeFloat {
   0% { transform: translateY(0px) rotate(-0.5deg); }
-  100% { transform: translateY(-6px) rotate(0.5deg); }
+  100% { transform: translateY(-4px) rotate(0.5deg); }
 }
 
-.biru-3d-emblem-glow {
+.emblem-halo-glow {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 240px;
-  height: 140px;
-  background: radial-gradient(ellipse, rgba(217, 119, 6, 0.45) 0%, rgba(139, 30, 30, 0.25) 50%, transparent 80%);
-  filter: blur(28px);
+  width: 220px;
+  height: 120px;
+  background: radial-gradient(ellipse, rgba(217, 119, 6, 0.5) 0%, rgba(139, 30, 30, 0.3) 50%, transparent 80%);
+  filter: blur(24px);
   z-index: -1;
   pointer-events: none;
 }
 
-/* Insignia Ovalada 3D */
-.biru-3d-badge-frame {
-  position: relative;
+.emblem-gold-bezel {
   padding: 3px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #FDE68A 0%, #D97706 30%, #78350F 50%, #F59E0B 80%, #FEF3C7 100%);
+  background: linear-gradient(135deg, #FEF08A 0%, #F59E0B 25%, #92400E 50%, #D97706 75%, #FEF9C3 100%);
   box-shadow: 
-    0 10px 25px rgba(0, 0, 0, 0.7),
-    0 0 20px rgba(217, 119, 6, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.4);
+    0 12px 30px rgba(0, 0, 0, 0.85),
+    0 0 25px rgba(217, 119, 6, 0.45),
+    inset 0 2px 4px rgba(255, 255, 255, 0.5);
 }
 
-.biru-badge-bevel-outer {
-  padding: 3px;
-  border-radius: 9999px;
-  background: #0B0E14;
-}
-
-.biru-badge-bevel-inner {
+.emblem-inner-core {
   position: relative;
-  padding: 10px 32px 8px;
+  padding: 8px 26px 7px;
   border-radius: 9999px;
-  background: radial-gradient(ellipse at 50% 25%, #1F2937 0%, #111827 60%, #0B0E14 100%);
-  border: 1.5px solid rgba(245, 158, 11, 0.6);
+  background: radial-gradient(ellipse at 50% 25%, #1F2937 0%, #111827 65%, #0B0E14 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.65);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   box-shadow: 
-    inset 0 3px 8px rgba(255, 255, 255, 0.15),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.7);
+    inset 0 3px 6px rgba(255, 255, 255, 0.2),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.7);
 }
 
-.biru-badge-header {
+.emblem-est-tag {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.68rem;
+  gap: 6px;
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   color: #FCD34D;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
-.biru-badge-dot {
+.star-icon {
   color: #F59E0B;
-  font-size: 0.6rem;
+  font-size: 0.55rem;
 }
 
-.biru-badge-tbo {
-  font-family: var(--font-brand);
-}
-
-/* Tipografía 3D "Biru" con Gran Volumen y Luz */
-.biru-3d-title-wrap {
+.emblem-brand-wordmark {
   position: relative;
   overflow: hidden;
-  margin: -2px 0 2px;
+  margin: -4px 0 0px;
 }
 
-.biru-3d-title {
+.biru-sculpted-3d-text {
   font-family: 'Outfit', cursive, sans-serif;
-  font-size: 2.75rem;
+  font-size: 2.35rem;
   font-weight: 900;
   letter-spacing: -0.02em;
   margin: 0;
-  line-height: 1;
+  line-height: 1.05;
   background: linear-gradient(180deg, #FFFFFF 0%, #FEF08A 35%, #F59E0B 75%, #D97706 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 2px 0 #78350F)
           drop-shadow(0 4px 0 #451A03)
           drop-shadow(0 6px 1px rgba(0, 0, 0, 0.6))
-          drop-shadow(0 10px 14px rgba(0, 0, 0, 0.8));
+          drop-shadow(0 8px 12px rgba(0, 0, 0, 0.9));
 }
 
-.biru-title-sheen-sweep {
+.emblem-light-sweep {
   position: absolute;
   top: 0;
   left: -100%;
-  width: 60%;
+  width: 50%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
   transform: skewX(-25deg);
-  animation: logoSheenSweep 3.5s infinite ease-in-out;
+  animation: emblemSweep 3.2s infinite ease-in-out;
   pointer-events: none;
 }
 
-@keyframes logoSheenSweep {
+@keyframes emblemSweep {
   0%, 60% { left: -100%; }
   100% { left: 200%; }
 }
 
-.biru-badge-subtext {
-  font-size: 0.64rem;
+.emblem-delivery-tag {
+  font-size: 0.58rem;
   font-weight: 800;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.25em;
   color: #E2E8F0;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-  border-top: 1px solid rgba(245, 158, 11, 0.35);
-  padding-top: 4px;
+  border-top: 1px solid rgba(245, 158, 11, 0.4);
+  padding-top: 3px;
   width: 100%;
   text-align: center;
 }
 
-.biru-logo-cast-shadow {
-  width: 180px;
-  height: 12px;
+.emblem-drop-shadow-3d {
+  width: 160px;
+  height: 10px;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.75) 0%, transparent 75%);
-  margin-top: 4px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.8) 0%, transparent 75%);
+  margin-top: 3px;
   filter: blur(4px);
 }
 
 /* ==========================================================================
-   ESCENARIO DE LA HAMBURGUESA Y SUS CAPAS
+   ESCENA FINAL: PANEL DE TEXTOS Y HORARIOS EN 3D MODERNO
    ========================================================================== */
-.burger-assembly-scene {
-  position: relative;
-  width: 100%;
-  height: 290px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  margin: 10px 0 15px;
-  perspective: 1000px;
-}
-
-.shadow-plate-table {
+.biru-3d-text-showcase-panel {
   position: absolute;
-  bottom: 0px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 360px;
-  height: 38px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 75%);
-  filter: blur(8px);
-  z-index: 0;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-.shadow-plate-table.visible {
-  opacity: 1;
-}
-
-.burger-layer-item {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 440px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: transform 0.65s cubic-bezier(0.34, 1.3, 0.64, 1), opacity 0.4s ease;
-}
-
-.burger-svg-layer {
-  width: 100%;
-  height: auto;
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
-  transition: transform 0.3s ease;
-}
-
-/* Estados de Caída */
-.layer-hidden {
-  opacity: 0;
-  transform: translate(-50%, -160px) scale(0.92) rotateX(15deg);
-  pointer-events: none;
-}
-
-.layer-dropped {
-  opacity: 1;
-  animation: dropBounceLayer 0.55s cubic-bezier(0.34, 1.5, 0.64, 1) forwards;
-}
-
-@keyframes dropBounceLayer {
-  0% {
-    transform: translate(-50%, -180px) scale(0.92);
-    opacity: 0;
-  }
-  60% {
-    transform: translate(-50%, 6px) scale(1.04, 0.94);
-    opacity: 1;
-  }
-  80% {
-    transform: translate(-50%, -3px) scale(0.98, 1.02);
-  }
-  100% {
-    transform: translate(-50%, 0) scale(1, 1);
-  }
-}
-
-/* Alineaciones precisas de cada ingrediente sobre el plato */
-.layer-0-plate {
-  bottom: 0px;
-  z-index: 2;
-  max-width: 460px;
-}
-
-.layer-1-bottom-bun {
-  bottom: 34px;
-  z-index: 4;
-  max-width: 350px;
-}
-
-.layer-2-greens {
-  bottom: 50px;
-  z-index: 6;
-  max-width: 360px;
-}
-
-.layer-3-meat {
-  bottom: 60px;
-  z-index: 8;
-  max-width: 360px;
-}
-
-.layer-4-cheese {
-  bottom: 64px;
-  z-index: 10;
-  max-width: 370px;
-}
-
-.layer-5-bacon {
+  left: 20px;
+  right: 20px;
   bottom: 74px;
-  z-index: 12;
-  max-width: 360px;
-}
-
-.layer-6-egg {
-  bottom: 80px;
-  z-index: 14;
-  max-width: 370px;
-}
-
-.layer-7-top-bun {
-  bottom: 104px;
-  z-index: 16;
-  max-width: 360px;
-}
-
-.layer-8-skewer {
-  bottom: 115px;
-  z-index: 18;
-  max-width: 80px;
-}
-
-.skewer-svg {
-  width: 100%;
-  height: 140px;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
-}
-
-/* Etiquetas flotantes en modo Exploded / Desglosado 3D */
-.layer-caption-tag {
-  display: none;
-  background: rgba(11, 14, 20, 0.88);
-  border: 1px solid var(--accent-gold);
-  color: #FCD34D;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  margin-top: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-/* MODO EXPLODED (VISTA DESGLOSADA 3D) */
-.is-exploded-mode .burger-assembly-scene {
-  height: 380px;
-}
-
-.is-exploded-mode .layer-caption-tag {
-  display: block;
-}
-
-.is-exploded-mode .layer-8-skewer.layer-dropped {
-  transform: translate(-50%, -120px) !important;
-}
-
-.is-exploded-mode .layer-7-top-bun.layer-dropped {
-  transform: translate(-50%, -90px) !important;
-}
-
-.is-exploded-mode .layer-6-egg.layer-dropped {
-  transform: translate(-50%, -60px) !important;
-}
-
-.is-exploded-mode .layer-5-bacon.layer-dropped {
-  transform: translate(-50%, -35px) !important;
-}
-
-.is-exploded-mode .layer-4-cheese.layer-dropped {
-  transform: translate(-50%, -10px) !important;
-}
-
-.is-exploded-mode .layer-3-meat.layer-dropped {
-  transform: translate(-50%, 15px) !important;
-}
-
-.is-exploded-mode .layer-2-greens.layer-dropped {
-  transform: translate(-50%, 40px) !important;
-}
-
-.is-exploded-mode .layer-1-bottom-bun.layer-dropped {
-  transform: translate(-50%, 65px) !important;
-}
-
-.is-exploded-mode .layer-0-plate.layer-dropped {
-  transform: translate(-50%, 90px) !important;
-}
-
-/* ==========================================================================
-   INFORMACIÓN Y HORARIOS EN 3D MODERNO
-   ========================================================================== */
-.biru-3d-info-hud {
-  position: relative;
-  z-index: 30;
+  z-index: 32;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(24px);
   transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
   pointer-events: none;
 }
 
-.biru-3d-info-hud.hud-visible-3d {
+.biru-3d-text-showcase-panel.active-panel {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
 }
 
-.hud-horarios-header {
-  text-align: center;
-  margin-bottom: -4px;
+.showcase-horarios-header {
+  text-align: left;
 }
 
-.hud-horarios-3d-text {
+.horarios-volumetric-3d-title {
   font-family: var(--font-brand);
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 900;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: #FFFFFF;
   margin: 0;
   text-shadow: 
@@ -1053,103 +968,98 @@ button {
     0 2px 0 #B45309,
     0 3px 0 #78350F,
     0 4px 0 #451A03,
-    0 6px 12px rgba(0, 0, 0, 0.85);
+    0 6px 14px rgba(0, 0, 0, 0.9);
 }
 
-.hud-cards-grid {
+.showcase-info-cards-3d {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
-.hud-glass-card {
+.info-glass-card-3d {
   position: relative;
-  background: rgba(17, 24, 39, 0.72);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 14, 20, 0.86);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-md);
-  padding: 10px 12px;
+  padding: 8px 10px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   overflow: hidden;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: transform 0.25s ease, border-color 0.25s ease;
 }
 
-.hud-glass-card:hover {
+.info-glass-card-3d:hover {
   transform: translateY(-2px);
-  border-color: rgba(245, 158, 11, 0.4);
+  border-color: rgba(245, 158, 11, 0.5);
 }
 
-.hud-card-shine {
+.card-glass-specular {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
+  height: 45%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
   pointer-events: none;
 }
 
-.hud-card-icon-wrap {
-  width: 32px;
-  height: 32px;
+.card-icon-pill {
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
-  background: rgba(139, 30, 30, 0.25);
-  border: 1px solid rgba(139, 30, 30, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.hud-icon-salon {
+.card-icon-pill.red {
+  background: rgba(139, 30, 30, 0.35);
+  border: 1px solid rgba(139, 30, 30, 0.55);
   color: #F87171;
 }
 
-.hud-card-icon-wrap.green {
-  background: rgba(16, 185, 129, 0.18);
-  border-color: rgba(16, 185, 129, 0.4);
+.card-icon-pill.green {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.5);
 }
 
-.hud-live-dot {
-  width: 9px;
-  height: 9px;
+.live-status-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #10B981;
   box-shadow: 0 0 10px #10B981;
-  animation: pulseLiveDot 1.6s infinite ease-in-out;
+  animation: pulseLiveDot 1.5s infinite ease-in-out;
 }
 
-@keyframes pulseLiveDot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.3); opacity: 0.7; }
-}
-
-.hud-card-icon-wrap.amber {
-  background: rgba(217, 119, 6, 0.2);
-  border-color: rgba(217, 119, 6, 0.45);
+.card-icon-pill.amber {
+  background: rgba(217, 119, 6, 0.25);
+  border: 1px solid rgba(217, 119, 6, 0.5);
   color: #F59E0B;
 }
 
-.hud-card-content {
+.card-meta-text {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.hud-label-dim {
-  font-size: 0.65rem;
+.card-micro-label {
+  font-size: 0.6rem;
   font-weight: 700;
   color: var(--text-muted);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-.hud-value-highlight {
-  font-size: 0.82rem;
+.card-bold-value {
+  font-size: 0.78rem;
   font-weight: 800;
   color: var(--text-white);
   white-space: nowrap;
@@ -1157,227 +1067,166 @@ button {
   text-overflow: ellipsis;
 }
 
-.hud-value-highlight.green {
+.card-bold-value.green {
   color: #34D399;
 }
 
-.hud-value-highlight.amber {
+.card-bold-value.amber {
   color: #FBBF24;
 }
 
-/* Barra de Contacto 3D */
-.hud-contact-bar-3d {
+/* DOCK DE CONTACTO 3D */
+.showcase-contact-dock-3d {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.hud-contact-chip {
+.dock-chip-3d {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(11, 14, 20, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #E2E8F0;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  padding: 6px 12px;
+  padding: 5px 12px;
   border-radius: var(--radius-full);
   text-decoration: none;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   transition: all var(--transition-fast);
 }
 
-.hud-contact-chip:hover {
+.dock-chip-3d:hover {
   transform: translateY(-2px);
   border-color: var(--accent-gold);
   color: #FFFFFF;
 }
 
-.hud-contact-chip.chip-whatsapp:hover {
+.dock-chip-3d.chip-wpp:hover {
   border-color: #22C55E;
   color: #86EFAC;
-  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
 }
 
-.hud-contact-chip.chip-phone:hover {
+.dock-chip-3d.chip-tel:hover {
   border-color: #38BDF8;
   color: #BAE6FD;
 }
 
-/* Barra de Controles y Stepper */
-.burger-controls-toolbar {
+/* ==========================================================================
+   BARRA DE REPRODUCCIÓN DEL SPOT DE TV (TOOLBAR)
+   ========================================================================== */
+.tvad-player-toolbar {
+  position: relative;
+  z-index: 38;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 14px;
-  z-index: 35;
+  justify-content: space-between;
+  padding: 10px 18px 14px;
+  background: linear-gradient(180deg, transparent 0%, rgba(5, 8, 14, 0.85) 100%);
+  gap: 12px;
 }
 
-.ctrl-btn-action {
+.toolbar-left-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-control-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(20, 26, 36, 0.85);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-body);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 6px 13px;
+  padding: 5px 11px;
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.ctrl-btn-action:hover {
+.player-control-btn:hover {
   background: var(--bg-card-hover);
   border-color: var(--accent-gold);
   color: #FFFFFF;
   transform: translateY(-1px);
 }
 
-.ctrl-btn-action.active {
+.player-control-btn.sound-btn.sound-active {
   background: var(--accent-gold);
   border-color: var(--accent-gold);
   color: #000000;
-  box-shadow: 0 0 14px rgba(217, 119, 6, 0.45);
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.45);
 }
 
-.burger-layer-stepper {
+.tvad-timeline-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeline-step-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  margin-top: 10px;
-  z-index: 35;
-}
-
-.stepper-dot {
-  position: relative;
-  width: 22px;
-  height: 6px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  cursor: pointer;
   transition: all 0.25s ease;
   padding: 0;
 }
 
-.stepper-dot.completed {
-  background: rgba(217, 119, 6, 0.55);
-}
-
-.stepper-dot.current {
-  width: 32px;
-  background: #F59E0B;
-  box-shadow: 0 0 10px #F59E0B;
-}
-
-.dot-tooltip {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #0B0E14;
-  border: 1px solid var(--accent-gold);
-  color: #FCD34D;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.stepper-dot:hover .dot-tooltip {
-  opacity: 1;
-}
-
-/* Modal Foto Original de Referencia */
-.original-photo-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(5, 7, 10, 0.88);
-  backdrop-filter: blur(8px);
-  z-index: 60;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: fadeIn 0.2s ease;
-}
-
-.original-photo-card {
-  background: #141A23;
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  max-width: 360px;
-  width: 100%;
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.photo-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: var(--accent-gold);
-}
-
-.close-photo-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.close-photo-btn:hover {
+.timeline-step-btn:hover {
+  border-color: var(--accent-gold);
   color: #FFFFFF;
 }
 
-.original-photo-img {
-  width: 100%;
-  height: 240px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-light);
+.timeline-step-btn.passed-shot {
+  background: rgba(217, 119, 6, 0.45);
+  color: #FDE68A;
+  border-color: rgba(217, 119, 6, 0.6);
 }
 
-.photo-card-caption {
-  font-size: 0.72rem;
-  color: var(--text-body);
-  line-height: 1.4;
-  margin: 0;
+.timeline-step-btn.active-shot {
+  width: 28px;
+  height: 28px;
+  background: var(--accent-gold);
+  color: #000000;
+  border-color: #FEF08A;
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.6);
+  transform: scale(1.08);
 }
 
 @media (max-width: 900px) {
-  .hud-cards-grid {
+  .tvad-screen-frame {
+    height: 480px;
+  }
+
+  .showcase-info-cards-3d {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 6px;
   }
 
-  .burger-assembly-scene {
-    height: 250px;
+  .biru-3d-text-showcase-panel {
+    bottom: 65px;
   }
 
-  .is-exploded-mode .burger-assembly-scene {
-    height: 330px;
+  .tvad-shot-caption-overlay {
+    bottom: 65px;
+    max-width: calc(100% - 40px);
   }
 }
 
