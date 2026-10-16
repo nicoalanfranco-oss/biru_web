@@ -727,14 +727,58 @@ button {
 }
 
 @media (max-width: 991px) {
-  .hero-visual-col.cinematic-video-initial {
-    transform: translateY(15px) scale(1.2);
+  /* En móvil: disposición vertical fluida con el video como protagonista arriba */
+  .hero-content-grid.cinematic-intro-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 
+  /* El video se sitúa como elemento principal arriba de todo sin huecos vacíos */
+  .hero-visual-col {
+    order: -1;
+    width: 100%;
+    margin: 0 auto;
+    z-index: 5;
+  }
+
+  .hero-visual-col.cinematic-video-initial,
   .hero-visual-col.cinematic-video-docked {
-    transform: translateY(0) scale(1);
+    transform: none !important;
+  }
+
+  .hero-floating-video-wrapper {
+    max-width: 100%;
+  }
+
+  .hero-floating-video-canvas {
+    border-radius: 20px;
+  }
+
+  /* En móvil: mientras el video se reproduce inicialmente, el texto está plegado sin dejar espacio en blanco */
+  .hero-text-col.cinematic-text-initial {
+    opacity: 0;
+    transform: translateY(20px);
+    max-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+    margin: 0;
+    gap: 0;
+    transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1), max-height 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Al terminar la reproducción del video, el texto se despliega suavemente hacia abajo */
+  .hero-text-col.cinematic-text-entered {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 1200px;
+    overflow: visible;
+    pointer-events: auto;
+    gap: 20px;
+    transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.1s, transform 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.1s, max-height 1.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
+
 
 
 

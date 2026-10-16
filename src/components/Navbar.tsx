@@ -10,6 +10,14 @@ interface NavbarProps {
   onOpenCart: () => void;
 }
 
+let globalDeferredPrompt: any = null;
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    globalDeferredPrompt = e;
+  });
+}
+
 export const Navbar: React.FC<NavbarProps> = ({
   marca,
   tenant,
@@ -17,42 +25,62 @@ export const Navbar: React.FC<NavbarProps> = ({
   cartTotal,
   onOpenCart,
 }) => {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showInstall, setShowInstall] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(globalDeferredPrompt);
+  const [showInstall, setShowInstall] = useState(true);
 
   useEffect(() => {
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true;
-    if (isStandalone) return;
+    if (isStandalone) {
+      setShowInstall(false);
+      return;
+    }
+
+    if (globalDeferredPrompt) {
+      setDeferredPrompt(globalDeferredPrompt);
+    }
 
     const handler = (e: Event) => {
       e.preventDefault();
+      globalDeferredPrompt = e;
       setDeferredPrompt(e);
       setShowInstall(true);
     };
     window.addEventListener('beforeinstallprompt', handler);
 
-    const timer = setTimeout(() => {
-      setShowInstall(true);
-    }, 1500);
+    const installedHandler = () => {
+      setShowInstall(false);
+      setDeferredPrompt(null);
+      globalDeferredPrompt = null;
+    };
+    window.addEventListener('appinstalled', installedHandler);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
-      clearTimeout(timer);
+      window.removeEventListener('appinstalled', installedHandler);
     };
   }, []);
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') setShowInstall(false);
-      setDeferredPrompt(null);
+    const promptToUse = deferredPrompt || globalDeferredPrompt;
+    if (promptToUse) {
+      try {
+        await promptToUse.prompt();
+        const { outcome } = await promptToUse.userChoice;
+        if (outcome === 'accepted') {
+          setShowInstall(false);
+        }
+        setDeferredPrompt(null);
+        globalDeferredPrompt = null;
+      } catch (err) {
+        console.warn('Install error:', err);
+      }
     } else {
-      alert('Para instalar la App de Biru, toca el menú de tu navegador (⋮ o Compartir) y selecciona "Instalar aplicación" o "Agregar a pantalla de inicio".');
+      alert('Para instalar la App de Biru, toca el menú de tu navegador (⋮ o Compartir) y selecciona "Instalar aplicación" o "Agregar a inicio".');
     }
   };
+
 
   return (
     <header className="navbar-wrapper">
