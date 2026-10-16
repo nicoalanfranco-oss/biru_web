@@ -392,6 +392,27 @@ ${lineasItems}
             </div>
           )}
 
+          {/* Estado de Atención y Horarios */}
+          {marca?.estado_atencion && !marca.estado_atencion.abierto_ahora && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '10px',
+              padding: '10px 14px',
+              fontSize: '0.82rem',
+              color: '#fca5a5',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              lineHeight: 1.4
+            }}>
+              <AlertCircle size={18} style={{ flexShrink: 0, color: '#ef4444' }} />
+              <div>
+                <strong>Local cerrado en este momento</strong> ({marca.estado_atencion.mensaje_estado}). Podés adelantar tu pedido para que comience a elaborarse en la próxima apertura.
+              </div>
+            </div>
+          )}
+
           {/* Tipo de Entrega */}
           <div className="checkout-section-block">
             <label className="checkout-section-label">¿Cómo querés recibir tu comida?</label>
@@ -405,7 +426,10 @@ ${lineasItems}
                   <Bike size={18} />
                   <div>
                     <span className="tab-title">Delivery a Domicilio</span>
-                    <span className="tab-sub">+$60 UYU</span>
+                    <span className="tab-sub">
+                      {marca?.costo_delivery !== undefined ? `+$${marca.costo_delivery} UYU` : '+$60 UYU'}
+                      {marca?.estado_atencion && !marca.estado_atencion.delivery_abierto_ahora ? ' · Fuera de horario' : ''}
+                    </span>
                   </div>
                 </button>
               )}
@@ -424,6 +448,26 @@ ${lineasItems}
                 </button>
               )}
             </div>
+
+            {marca?.estado_atencion?.abierto_ahora && !marca.estado_atencion.delivery_abierto_ahora && tipoEntrega === 'delivery' && (
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                marginTop: '10px',
+                fontSize: '0.8rem',
+                color: '#fcd34d',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <AlertCircle size={16} style={{ flexShrink: 0, color: '#f59e0b' }} />
+                <span>
+                  El reparto por <strong>Delivery</strong> está fuera de turno ahora. Si confirmás, tu pedido quedará registrado para despachar cuando comience el reparto o podés optar por <strong>Retiro en Mostrador</strong>.
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Datos Personales */}

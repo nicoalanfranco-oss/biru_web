@@ -292,6 +292,53 @@ button {
   font-weight: 700;
 }
 
+.navbar-status-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.navbar-status-indicator.indicator-open {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+  animation: pulse-status 2s infinite;
+}
+
+.navbar-status-indicator.indicator-closed {
+  background: #f43f5e;
+  box-shadow: 0 0 6px rgba(244, 63, 94, 0.4);
+}
+
+@keyframes pulse-status {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.navbar-schedule-badge.navbar-schedule-open {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.navbar-schedule-badge.navbar-schedule-closed {
+  border-color: rgba(244, 63, 94, 0.3);
+  background: rgba(244, 63, 94, 0.06);
+}
+
+.navbar-status-pill {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.navbar-status-pill.open {
+  color: #10b981;
+}
+
+.navbar-status-pill.closed {
+  color: #f43f5e;
+}
+
 /* Dirección cliqueable → Google Maps */
 .navbar-location-link {
   text-decoration: none;

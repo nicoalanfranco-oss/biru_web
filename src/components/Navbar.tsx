@@ -81,9 +81,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                   ? tenant.direccion.replace(/^(Dr\.?\s?Domingo\s?)?/i, '').trim()
                   : 'Catalina 98'}
               </a>
-              <span className="navbar-schedule-badge">
-                <Clock size={11} />
-                <span className="schedule-days-text">{marca.dias_atencion || 'Mar a Dom'}: </span>{marca.horario_atencion || '19:30 a 01:00 hs'}
+              <span className={`navbar-schedule-badge ${marca.estado_atencion ? (marca.estado_atencion.abierto_ahora ? 'navbar-schedule-open' : 'navbar-schedule-closed') : ''}`}>
+                {marca.estado_atencion ? (
+                  <>
+                    <span className={`navbar-status-indicator ${marca.estado_atencion.abierto_ahora ? 'indicator-open' : 'indicator-closed'}`} />
+                    <span className={`navbar-status-pill ${marca.estado_atencion.abierto_ahora ? 'open' : 'closed'}`}>
+                      {marca.estado_atencion.abierto_ahora ? 'Abierto' : 'Cerrado'}
+                    </span>
+                    <span className="schedule-days-text">· {marca.estado_atencion.mensaje_estado}</span>
+                  </>
+                ) : (
+                  <>
+                    <Clock size={11} />
+                    <span className="schedule-days-text">{marca.dias_atencion || 'Mar a Dom'}: </span>{marca.horario_atencion || '19:30 a 01:00 hs'}
+                  </>
+                )}
               </span>
             </div>
           </div>
