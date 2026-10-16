@@ -24,6 +24,7 @@ export const MARCA_INFO: MarcaInfo = {
   permite_tarjeta: (realData.marca as any)?.permite_tarjeta !== false,
   permite_transferencia: (realData.marca as any)?.permite_transferencia !== false,
   costo_delivery: realData.marca?.costo_delivery !== undefined ? Number(realData.marca.costo_delivery) : 60,
+  tiempo_espera_delivery: (realData.marca as any)?.tiempo_espera_delivery || '30–45 min',
   logo_url: realData.marca?.logo_url || '/logo_biru.jpg',
 };
 
@@ -58,6 +59,7 @@ function parseMarcaFromBackend(m: any, estadoAtencion?: any): MarcaInfo {
     permite_tarjeta: m.permite_tarjeta !== false,
     permite_transferencia: m.permite_transferencia !== false,
     costo_delivery: m.costo_delivery !== undefined ? Number(m.costo_delivery) : 60,
+    tiempo_espera_delivery: m.tiempo_espera_delivery || '30–45 min',
     logo_url: m.logo_url || MARCA_INFO.logo_url,
     estado_atencion: estadoAtencion || m.estado_atencion,
   };

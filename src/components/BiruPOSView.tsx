@@ -3,7 +3,7 @@ import {
   X, Plus, Minus, Trash2, Sparkles,
   ArrowRight, ChevronRight, ShoppingBag, Clock, Utensils
 } from 'lucide-react';
-import { ProductoElaborado, ProductoReventa, CartItem } from '../types/food';
+import { ProductoElaborado, ProductoReventa, CartItem, MarcaInfo } from '../types/food';
 import { triggerHaptic } from '../utils/haptics';
 
 interface BiruPOSViewProps {
@@ -11,6 +11,7 @@ interface BiruPOSViewProps {
   platos: ProductoElaborado[];
   reventa: ProductoReventa[];
   cart: CartItem[];
+  marca?: MarcaInfo;
   onClose: () => void;
   onUpdateQty: (id: string, delta: number) => void;
   onRemoveItem: (id: string) => void;
@@ -45,6 +46,7 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
   platos,
   reventa,
   cart,
+  marca,
   onClose,
   onUpdateQty,
   onRemoveItem,
@@ -120,7 +122,7 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
               </div>
               <div className="pos-header-delivery">
                 <Clock size={12} />
-                <span>Delivery y Retiro en Tacuarembó · 30–45 min</span>
+                <span>Delivery y Retiro en Tacuarembó · {marca?.tiempo_espera_delivery || '30–45 min'}</span>
               </div>
             </div>
           </div>
@@ -524,7 +526,7 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
                 </div>
                 <div className="mcart-summary-row mcart-summary-row--note">
                   <span>Envío / Retiro</span>
-                  <span>Se confirma en el checkout</span>
+                  <span>{marca?.costo_delivery !== undefined ? (Number(marca.costo_delivery) === 0 ? 'Envío gratis' : `+$${marca.costo_delivery} UYU`) : 'Se confirma en el checkout'}</span>
                 </div>
                 <div className="mcart-summary-divider" />
                 <div className="mcart-summary-row mcart-summary-total">

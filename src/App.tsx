@@ -368,6 +368,7 @@ export const App: React.FC = () => {
           platos={platos}
           reventa={reventa}
           cart={cart}
+          marca={marca}
           onClose={() => setIsCartOpen(false)}
           onUpdateQty={handleUpdateQty}
           onRemoveItem={handleRemoveItem}
