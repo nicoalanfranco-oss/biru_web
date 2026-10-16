@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Utensils, Sparkles, Bike, MapPin, Beer, ArrowRight } from 'lucide-react';
 import { MarcaInfo, TenantInfo } from '../types/food';
 import { HeroVideoShowcase } from './HeroVideoShowcase';
@@ -9,12 +9,46 @@ interface HeroSectionProps {
   onExploreMenu?: () => void;
 }
 
+// ============================================================================
+// CONFIGURACIÓN DE MODO HERO:
+// 'cinematic-reveal' -> Prueba de animación: inicia abarcando hero total y se achica desplazándose a la derecha al entrar el texto de izq a der.
+// 'standard'         -> Configuración anterior intacta (dos columnas directas fijas).
+// ============================================================================
+const HERO_MODE: string = 'cinematic-reveal'; // 'cinematic-reveal' | 'standard'
+const SINGLE_CYCLE_FALLBACK_MS = 3800; // Máximo 1 sola repetición exacta (3.5s + margen)
+
+
 export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreMenu }) => {
   const [isLoaded, setIsLoaded] = useState(false);
+  // Estado cinemático: 'expanded' (video hero total de punta a punta) -> 'docked' (texto entra y video se acomoda)
+  const [cinematicState, setCinematicState] = useState<'expanded' | 'docked'>('expanded');
+  const hasDockedRef = useRef(false);
+
+  const handleCycleFinished = useCallback(() => {
+    if (!hasDockedRef.current) {
+      hasDockedRef.current = true;
+      setCinematicState('docked');
+      setIsLoaded(true);
+    }
+  }, []);
 
   useEffect(() => {
-    requestAnimationFrame(() => setIsLoaded(true));
-  }, []);
+    if (HERO_MODE === 'standard') {
+      setIsLoaded(true);
+      setCinematicState('docked');
+      return;
+    }
+
+    // Fallback de seguridad para 1 sola reproducción si no dispara el evento del video
+    const timer = setTimeout(() => {
+      handleCycleFinished();
+    }, SINGLE_CYCLE_FALLBACK_MS);
+
+    return () => clearTimeout(timer);
+  }, [handleCycleFinished]);
+
+  const isCinematic = HERO_MODE === 'cinematic-reveal';
+  const isDocked = cinematicState === 'docked';
 
   return (
     <section id="inicio" className="hero-section hero-biru-theme">
@@ -25,12 +59,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreMenu }) => {
       </div>
 
       <div className="page-container">
-        <div className="hero-content-grid">
+        <div className={`hero-content-grid ${isCinematic ? 'cinematic-intro-grid' : ''}`}>
           {/* Lado Texto / Pitch */}
-          <div className={`hero-text-col ${isLoaded ? 'hero-text-animate' : ''}`}>
+          <div
+            className={`hero-text-col ${
+              isCinematic
+                ? isDocked
+                  ? 'cinematic-text-entered'
+                  : 'cinematic-text-initial'
+                : isLoaded
+                ? 'hero-text-animate'
+                : ''
+            }`}
+          >
             <div className="hero-badge-pill">
               <span className="hero-badge-dot" />
-              <span>EST. 2013 • TACUAREMBÓ • CATALINA 98</span>
+              <span>DESDE 2013 • TACUAREMBÓ • CATALINA 98</span>
             </div>
 
             <h1 className="hero-main-title">
@@ -81,11 +125,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreMenu }) => {
           </div>
 
           {/* Lado Video Spot Cinematográfico Ligero */}
-          <div className={`hero-visual-col ${isLoaded ? 'hero-visual-animate' : ''}`}>
-            <HeroVideoShowcase onExploreMenu={onExploreMenu} />
+          <div
+            className={`hero-visual-col ${
+              isCinematic
+                ? isDocked
+                  ? 'cinematic-video-docked'
+                  : 'cinematic-video-initial'
+                : isLoaded
+                ? 'hero-visual-animate'
+                : ''
+            }`}
+          >
+            <HeroVideoShowcase
+              onExploreMenu={onExploreMenu}
+              onFirstCycleComplete={handleCycleFinished}
+            />
           </div>
         </div>
       </div>
     </section>
   );
 };
+
+
+

@@ -224,8 +224,8 @@ button {
   top: 0;
   z-index: 1000;
   background: rgba(11, 14, 20, 0.88);
-  backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border-light);
   transition: background var(--transition-normal);
 }
@@ -545,6 +545,7 @@ button {
   color: var(--accent-gold);
   background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -666,6 +667,58 @@ button {
 }
 
 /* ==========================================================================
+   HERO CINEMATIC INTRO TRANSITION (PRUEBA SOLICITADA)
+   ========================================================================== */
+.hero-content-grid.cinematic-intro-grid {
+  position: relative;
+  overflow: visible;
+}
+
+/* Columna de texto en modo cinemático: entra de izquierda a derecha suavemente */
+.hero-text-col.cinematic-text-initial {
+  opacity: 0;
+  transform: translateX(-160px);
+  pointer-events: none;
+  transition: opacity 1.6s cubic-bezier(0.16, 1, 0.3, 1), transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-text-col.cinematic-text-entered {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  transition: opacity 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s, transform 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+}
+
+/* Columna de video en modo cinemático: arranca en hero total de punta a punta y se achica/desplaza a la derecha */
+.hero-visual-col.cinematic-video-initial {
+  opacity: 1;
+  z-index: 20;
+  /* Centrado y escalado de punta a punta cubriendo la pantalla */
+  transform: translateX(calc(-66% - 16px)) scale(2.35);
+  transition: transform 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.hero-visual-col.cinematic-video-docked {
+  opacity: 1;
+  z-index: 1;
+  transform: translateX(0) scale(1);
+  transition: transform 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+@media (max-width: 991px) {
+  .hero-visual-col.cinematic-video-initial {
+    transform: translateY(15px) scale(1.2);
+  }
+  .hero-visual-col.cinematic-video-docked {
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+
+/* ==========================================================================
    BIRU CINEMATIC /TVADS 3D BURGER ASSEMBLY & STUDIO FREEZE HERO
    ========================================================================== */
 .biru-cinematic-tvad-wrapper {
@@ -690,6 +743,7 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
   overflow: hidden;
   background: #0B0E14;
+  -webkit-user-select: none;
   user-select: none;
   transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
@@ -951,6 +1005,7 @@ button {
   line-height: 1;
   background: linear-gradient(180deg, #FFFFFF 0%, #FEF08A 35%, #F59E0B 75%, #D97706 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 2px 0 #78350F)
           drop-shadow(0 3.5px 0 #451A03)
@@ -1133,8 +1188,8 @@ button {
   align-items: center;
   gap: 5px;
   background: rgba(11, 14, 20, 0.72);
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #E2E8F0;
   font-size: 0.68rem;
@@ -1207,6 +1262,7 @@ button {
   display: inline-block;
   border-radius: 50%;
   overflow: hidden;
+  -webkit-user-select: none;
   user-select: none;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
   border: 3px solid var(--accent-gold);
@@ -1331,6 +1387,7 @@ button {
   overflow-x: auto;
   padding-bottom: 16px;
   margin-bottom: 32px;
+  -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
@@ -1475,6 +1532,7 @@ button {
   margin-bottom: 16px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;
@@ -1659,8 +1717,8 @@ button {
   left: 16px;
   right: 16px;
   background: rgba(11, 14, 20, 0.85);
-  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--border-light);
   padding: 10px 14px;
   border-radius: var(--radius-md);
@@ -1719,8 +1777,8 @@ button {
   right: 0;
   bottom: 0;
   background: var(--bg-overlay);
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -1778,8 +1836,8 @@ button {
   right: 0;
   bottom: 0;
   background: var(--bg-overlay);
-  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -1937,7 +1995,7 @@ button {
   }
   .dish-modal-media-col {
     height: 220px;
-    min-height: auto;
+    min-height: 0;
   }
   .dish-modal-info-col {
     padding: 20px;
@@ -1954,8 +2012,8 @@ button {
   right: 0;
   bottom: 0;
   background: var(--bg-overlay);
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   z-index: 2000;
   display: flex;
   justify-content: flex-end;
@@ -2960,8 +3018,8 @@ button {
   right: 24px;
   z-index: 2500;
   background: rgba(20, 26, 35, 0.94);
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border-medium);
   box-shadow: var(--shadow-lg);
   border-radius: var(--radius-full);
@@ -3064,8 +3122,8 @@ button {
     right: 0;
     height: 64px;
     background: rgba(11, 14, 20, 0.94);
-    backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
     border-top: 1px solid var(--border-light);
     z-index: 1500;
     justify-content: space-around;
@@ -3214,6 +3272,7 @@ button {
   font-weight: 800;
   background: linear-gradient(90deg, #fd5949, #d6249f, #285AEB);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 1.2;
 }
@@ -3253,6 +3312,7 @@ button {
     0 0 28px rgba(99, 179, 237, 0.12),
     0 4px 16px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
