@@ -15,14 +15,17 @@ interface HeroSectionProps {
 // 'standard'         -> Configuración anterior intacta (dos columnas directas fijas).
 // ============================================================================
 const HERO_MODE: string = 'cinematic-reveal'; // 'cinematic-reveal' | 'standard'
-const SINGLE_CYCLE_FALLBACK_MS = 3800; // Máximo 1 sola repetición exacta (3.5s + margen)
+const SINGLE_CYCLE_FALLBACK_MS = 4800; // Máximo 1 sola repetición exacta (4.5s del video limpio + margen)
 
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreMenu }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  // Estado cinemático: 'expanded' (video hero total de punta a punta) -> 'docked' (texto entra y video se acomoda)
-  const [cinematicState, setCinematicState] = useState<'expanded' | 'docked'>('expanded');
-  const hasDockedRef = useRef(false);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 991;
+  const [isLoaded, setIsLoaded] = useState(isMobile);
+  // Estado cinemático: en móvil entra todo directo ('docked'). En escritorio arranca 'expanded' y se acomoda tras el video.
+  const [cinematicState, setCinematicState] = useState<'expanded' | 'docked'>(
+    isMobile ? 'docked' : 'expanded'
+  );
+  const hasDockedRef = useRef(isMobile);
 
   const handleCycleFinished = useCallback(() => {
     if (!hasDockedRef.current) {
@@ -33,13 +36,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreMenu }) => {
   }, []);
 
   useEffect(() => {
-    if (HERO_MODE === 'standard') {
+    if (HERO_MODE === 'standard' || window.innerWidth <= 991) {
       setIsLoaded(true);
       setCinematicState('docked');
       return;
     }
 
-    // Fallback de seguridad para 1 sola reproducción si no dispara el evento del video
+    // Fallback de seguridad para 1 sola reproducción en escritorio si no dispara el evento del video
     const timer = setTimeout(() => {
       handleCycleFinished();
     }, SINGLE_CYCLE_FALLBACK_MS);
