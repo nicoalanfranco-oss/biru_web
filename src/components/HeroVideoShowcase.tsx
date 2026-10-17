@@ -6,17 +6,14 @@ interface HeroVideoShowcaseProps {
 }
 
 export const HeroVideoShowcase: React.FC<HeroVideoShowcaseProps> = ({ onFirstCycleComplete }) => {
-  const video0Ref = useRef<HTMLVideoElement>(null);
-  const video1Ref = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const cycleNotifiedRef = useRef<boolean>(false);
 
-  // 0 -> Biru.mp4 (Hamburguesa animada limpia sin marcas, 4.5s)
-  // 1 -> Presentacion.mp4 (Spot del bar / pizzas y cerveza, ~10s)
-  const [activeClipIndex, setActiveClipIndex] = useState<0 | 1>(0);
-  const hasFinishedFirstClipRef = useRef<boolean>(false);
-
-  // Reproducción segura con mute para políticas estrictas de navegadores
-  const safePlay = useCallback((video: HTMLVideoElement | null) => {
+  useEffect(() => {
+    const video = videoRef.current;
     if (!video) return;
+
+    // Asegurar reproducción con mute en todos los navegadores
     video.muted = true;
     const playPromise = video.play();
     if (playPromise !== undefined) {
@@ -25,44 +22,20 @@ export const HeroVideoShowcase: React.FC<HeroVideoShowcaseProps> = ({ onFirstCyc
         video.play().catch(() => {});
       });
     }
-  }, []);
 
-  // Iniciar la reproducción del primer clip al montar
-  useEffect(() => {
-    const v0 = video0Ref.current;
-    if (v0) {
-      v0.currentTime = 0;
-      safePlay(v0);
-    }
-  }, [safePlay]);
+    const handleTimeUpdate = () => {
+      // Al terminar los primeros 4.4s (clip de la hamburguesa), dispara la entrada y acomodo del texto
+      if (video.currentTime >= 4.4 && !cycleNotifiedRef.current) {
+        cycleNotifiedRef.current = true;
+        onFirstCycleComplete?.();
+      }
+    };
 
-  // Manejo de finalización del clip 0 (Biru.mp4)
-  const handleClip0Ended = useCallback(() => {
-    // Al terminar la primera vuelta, dispara el desplazamiento y entrada del texto
-    if (!hasFinishedFirstClipRef.current) {
-      hasFinishedFirstClipRef.current = true;
-      onFirstCycleComplete?.();
-    }
-
-    // Pasa al clip 1 (Presentación) de manera continua y suave
-    const v1 = video1Ref.current;
-    if (v1) {
-      v1.currentTime = 0;
-      safePlay(v1);
-    }
-    setActiveClipIndex(1);
-  }, [onFirstCycleComplete, safePlay]);
-
-  // Manejo de finalización del clip 1 (Presentacion.mp4)
-  const handleClip1Ended = useCallback(() => {
-    // Vuelve al clip 0 (Hamburguesa) y continúa el ciclo consecutivo
-    const v0 = video0Ref.current;
-    if (v0) {
-      v0.currentTime = 0;
-      safePlay(v0);
-    }
-    setActiveClipIndex(0);
-  }, [safePlay]);
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+    };
+  }, [onFirstCycleComplete]);
 
   return (
     <div className="hero-floating-video-wrapper">
@@ -71,28 +44,17 @@ export const HeroVideoShowcase: React.FC<HeroVideoShowcaseProps> = ({ onFirstCyc
 
       {/* Contenedor sin recuadros ni bordes */}
       <div className="hero-floating-video-canvas">
-        {/* Clip 0: Animación de Hamburguesa limpia (sin 'k' inicial ni texto 'Biru.' final) */}
+        {/* Video unificado continuo: Clip 1 (Hamburguesa) + Clip 2 (Presentación Biru) en loop nativo */}
         <video
-          ref={video0Ref}
+          ref={videoRef}
           src="/Biru.mp4"
           poster="/hero_video_poster.jpg"
+          autoPlay
+          loop
           muted
           playsInline
           preload="auto"
-          onEnded={handleClip0Ended}
-          className={`hero-floating-video-element ${activeClipIndex === 0 ? 'video-active' : 'video-standby'}`}
-        />
-
-        {/* Clip 1: Spot de presentación (cultura Biru, pizzas, salón y delivery) */}
-        <video
-          ref={video1Ref}
-          src="/Presentacion.mp4"
-          poster="/hero_video_poster.jpg"
-          muted
-          playsInline
-          preload="auto"
-          onEnded={handleClip1Ended}
-          className={`hero-floating-video-element ${activeClipIndex === 1 ? 'video-active' : 'video-standby'}`}
+          className="hero-floating-video-element"
         />
 
         {/* Viñeta suave para fundirse orgánicamente con el fondo de la web */}

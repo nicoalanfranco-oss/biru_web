@@ -26,15 +26,21 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   'Hamburguesas': '🍔',
   'Burgers': '🍔',
   'Pizzas': '🍕',
+  'Pizzetas': '🍕',
   'Tablas': '🧀',
   'Picadas': '🥓',
-  'Milanesas': '🥩',
+  'Milanesas': '🍖',
   'Papas': '🍟',
   'Fritos': '🍟',
   'Sandwiches': '🥪',
   'Chivitos': '🥩',
+  'Panchos': '🌭',
+  'Tacos': '🌮',
+  'Ensaladas': '🥗',
   'Bebidas': '🥤',
   'Cervezas': '🍺',
+  'Refrescos': '🥤',
+  'Aguas': '💧',
   'Tragos': '🍸',
   'Cocktails': '🍹',
   'Postres': '🍨',
@@ -57,9 +63,10 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
 }) => {
   const [categoria, setCategoria] = useState('todos');
   const [mobileTab, setMobileTab] = useState<'menu' | 'pedido'>('menu');
+  const [mobileUpsellCategory, setMobileUpsellCategory] = useState<string>('todos');
 
   const categorias = useMemo(() => {
-    const list = Array.from(new Set(platos.map(p => p.categoria || 'Hamburguesas')));
+    const list = Array.from(new Set(platos.map(p => p.categoria || 'Burgers')));
     if (reventa.length > 0 && !list.includes('Bebidas')) list.push('Bebidas');
     return ['todos', ...list];
   }, [platos, reventa]);
@@ -83,12 +90,19 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
     [cart]
   );
 
-  // Lista plana para carrusel horizontal en mobile (upsell)
-  const allProductsForScroller = useMemo(() => {
-    const platosSugg = platos.slice(0, 10);
-    const reventaSugg = reventa.slice(0, 6);
-    return { platosSugg, reventaSugg };
-  }, [platos, reventa]);
+  // Lista completa para carrusel en móvil (incluye todos los platos y bebidas sin recortar en 10)
+  const mobileFilteredPlatos = useMemo(() => {
+    if (mobileUpsellCategory === 'todos') return platos;
+    if (mobileUpsellCategory === 'Bebidas') return [];
+    return platos.filter(p => p.categoria === mobileUpsellCategory);
+  }, [platos, mobileUpsellCategory]);
+
+  const mobileFilteredReventa = useMemo(() => {
+    if (mobileUpsellCategory === 'todos' || mobileUpsellCategory === 'Bebidas') {
+      return reventa;
+    }
+    return [];
+  }, [reventa, mobileUpsellCategory]);
 
   const handleQuickAdd = useCallback((plato: ProductoElaborado) => {
     triggerHaptic('light');
@@ -454,9 +468,27 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
                 <span className="mcart-upsell-sub">Deslizá →</span>
               </div>
 
+              {/* Selector de categorías para explorar todo el menú en el carrito */}
+              <div className="mcart-cat-pills-bar">
+                {categorias.map(cat => (
+                  <button
+                    key={`mcat_pill_${cat}`}
+                    type="button"
+                    className={`mcart-cat-pill ${mobileUpsellCategory === cat ? 'active' : ''}`}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setMobileUpsellCategory(cat);
+                    }}
+                  >
+                    <span>{CATEGORY_EMOJIS[cat] || '🍽️'}</span>
+                    <span>{cat === 'todos' ? 'Todos' : cat}</span>
+                  </button>
+                ))}
+              </div>
+
               <div className="mcart-upsell-scroller">
-                {/* Platos */}
-                {allProductsForScroller.platosSugg.map(plato => (
+                {/* Platos completos filtrados por categoría o todos */}
+                {mobileFilteredPlatos.map(plato => (
                   <button
                     key={`upsell_${plato.producto_elaborado_id}`}
                     className={`mcart-upsell-card ${plato.es_personalizable ? 'mcart-upsell-card--armar' : ''}`}
@@ -488,8 +520,8 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
                   </button>
                 ))}
 
-                {/* Bebidas */}
-                {allProductsForScroller.reventaSugg.map(r => (
+                {/* Bebidas completas */}
+                {mobileFilteredReventa.map(r => (
                   <button
                     key={`upsell_rev_${r.producto_reventa_id}`}
                     className="mcart-upsell-card"
