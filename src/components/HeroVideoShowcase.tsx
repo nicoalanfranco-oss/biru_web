@@ -13,12 +13,20 @@ export const HeroVideoShowcase: React.FC<HeroVideoShowcaseProps> = ({ onFirstCyc
     const video = videoRef.current;
     if (!video) return;
 
-    // Asegurar reproducción con mute en todos los navegadores
+    // Asegurar inicio estricto en el segundo 0 y reproducción con mute
+    video.currentTime = 0;
     video.muted = true;
+
+    const handleLoadedMetadata = () => {
+      video.currentTime = 0;
+    };
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+
     const playPromise = video.play();
     if (playPromise !== undefined) {
       playPromise.catch(() => {
         video.muted = true;
+        video.currentTime = 0;
         video.play().catch(() => {});
       });
     }
@@ -33,6 +41,7 @@ export const HeroVideoShowcase: React.FC<HeroVideoShowcaseProps> = ({ onFirstCyc
 
     video.addEventListener('timeupdate', handleTimeUpdate);
     return () => {
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('timeupdate', handleTimeUpdate);
     };
   }, [onFirstCycleComplete]);
