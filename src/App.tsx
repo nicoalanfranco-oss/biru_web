@@ -13,7 +13,7 @@ import { ToastNotification, ToastData } from './components/ToastNotification';
 import { ProductoElaborado, ProductoReventa, GrupoOpciones, CartItem, TenantInfo, MarcaInfo } from './types/food';
 import { fetchBiruCatalogo, uploadComprobanteTransferencia, TENANT_INFO, MARCA_INFO, REAL_PLATOS, REAL_REVENTA, REAL_GRUPOS } from './services/api';
 import { useStructuredData } from './hooks/useStructuredData';
-import { CheckCircle2, Sparkles, Bell, ArrowRight, WifiOff, Paperclip, MessageCircle, Copy, Check } from 'lucide-react';
+import { CheckCircle2, Sparkles, Bell, ArrowRight, WifiOff, Paperclip, MessageCircle, Copy, Check, Clock } from 'lucide-react';
 import { triggerHaptic } from './utils/haptics';
 
 const InstagramIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
@@ -407,17 +407,55 @@ export const App: React.FC = () => {
               <img src="/logo_biru.jpg" alt="Biru" className="success-brand-logo" />
               <div className="success-badge-confirmed">
                 <CheckCircle2 size={16} />
-                <span>¡Pedido Recibido!</span>
+                <span>{marca?.estado_atencion && !marca.estado_atencion.abierto_ahora ? '¡Pedido Confirmado!' : '¡Pedido Recibido!'}</span>
               </div>
             </div>
 
             <div className="success-hero-block">
               <span className="success-order-num">Orden #B{orderSuccessNumber}</span>
-              <h3 className="success-title">¡Marchando a la cocina!</h3>
+              <h3 className="success-title">
+                {marca?.estado_atencion && !marca.estado_atencion.abierto_ahora
+                  ? '¡Pedido anticipado agendado!'
+                  : '¡Marchando a la cocina!'}
+              </h3>
               <p className="success-subtitle">
-                Ya registramos tu pedido en el sistema de Biru Bar & Delivery.
+                {marca?.estado_atencion && !marca.estado_atencion.abierto_ahora
+                  ? 'El local está cerrado en este momento. Dejamos tu pedido confirmado y comenzará su preparación en el horario de apertura.'
+                  : 'Ya registramos tu pedido en el sistema de Biru Bar & Delivery.'}
               </p>
             </div>
+
+            {/* Aviso de horario programado si el local está cerrado */}
+            {marca?.estado_atencion && !marca.estado_atencion.abierto_ahora && (
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.12)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                borderRadius: '12px',
+                padding: '10px 14px',
+                marginBottom: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                textAlign: 'left'
+              }}>
+                <Clock size={20} color="#F59E0B" style={{ flexShrink: 0 }} />
+                <div style={{ fontSize: '0.85rem', color: '#B45309', lineHeight: 1.35 }}>
+                  <strong style={{ display: 'block', color: '#92400E' }}>Entrada a cocina programada:</strong>
+                  <span>
+                    {marca.estado_atencion.proxima_apertura_fecha_hora ? (
+                      (() => {
+                        const d = new Date(marca.estado_atencion.proxima_apertura_fecha_hora);
+                        const dia = d.toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'numeric' });
+                        const hora = d.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+                        return `${dia.charAt(0).toUpperCase() + dia.slice(1)} a las ${hora} hs`;
+                      })()
+                    ) : (
+                      marca.estado_atencion.proxima_apertura || 'Próxima apertura del local'
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Botón WhatsApp prioritario */}
             {orderWhatsAppUrl && (
