@@ -284,41 +284,22 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   const handleSelectSuggestion = (s: AddressSuggestion) => {
-    setDireccion(s.direccion);
+    const trailingMatch = direccion.trim().match(/^(.*?)\s+(\d{1,5}(?:\s*(?:bis|a|b|c))?)$/i);
+    const userDoorNumber = trailingMatch ? trailingMatch[2].trim() : '';
+
+    let finalDir = s.direccion;
+    if (userDoorNumber && !new RegExp(`\\b${userDoorNumber}$`, 'i').test(finalDir)) {
+      finalDir = `${finalDir} ${userDoorNumber}`;
+    }
+
+    setDireccion(finalDir);
     setLatitud(s.latitud);
     setLongitud(s.longitud);
-    setGoogleMapsUrl(s.google_maps_url);
+    setGoogleMapsUrl(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${finalDir}, ${s.ciudad || 'Tacuarembó'}, Uruguay`)}`);
     setSugerencias([]);
     setMostrarSugerencias(false);
   };
 
-  const handleUseGps = () => {
-    if (!navigator.geolocation) {
-      setErrorMsg('Tu navegador no soporta geolocalización.');
-      return;
-    }
-    setBuscandoGps(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setLatitud(lat);
-        setLongitud(lng);
-        const url = `https://www.google.com/maps?q=${lat},${lng}`;
-        setGoogleMapsUrl(url);
-        if (!direccion) {
-          setDireccion(`Ubicación GPS (${lat.toFixed(5)}, ${lng.toFixed(5)})`);
-        }
-        setBuscandoGps(false);
-      },
-      (err) => {
-        console.warn('Error GPS:', err);
-        setErrorMsg('No se pudo obtener tu ubicación precisa. Podés escribir tu dirección manualmente.');
-        setBuscandoGps(false);
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -679,17 +660,8 @@ ${lineasItems}
           {/* Dirección para Delivery */}
           {tipoEntrega === 'delivery' && (
             <div className="checkout-section-block">
-              <div className="section-label-with-action">
+              <div style={{ marginBottom: '8px' }}>
                 <label className="checkout-section-label">Dirección de Entrega en Tacuarembó *</label>
-                <button
-                  type="button"
-                  onClick={handleUseGps}
-                  disabled={buscandoGps}
-                  className="btn-gps-action"
-                >
-                  <Navigation size={13} />
-                  <span>{buscandoGps ? 'Obteniendo GPS...' : 'Usar mi ubicación GPS'}</span>
-                </button>
               </div>
 
               <div className="checkout-fields-grid">
