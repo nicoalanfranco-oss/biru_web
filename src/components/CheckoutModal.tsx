@@ -5,7 +5,7 @@ import {
   Search, Loader2, Check, UserCheck, AlertCircle, Sparkles
 } from 'lucide-react';
 import { CartItem, MarcaInfo } from '../types/food';
-import { sendOrderToFood } from '../services/api';
+import { sendOrderToFood, searchAddress, AddressSuggestion } from '../services/api';
 
 const GOOGLE_CLIENT_ID = '713780303554-41bctfqdhvu5nc81sctj1qci2mvekviu.apps.googleusercontent.com';
 
@@ -126,6 +126,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [googleMapsUrl, setGoogleMapsUrl] = useState(savedCustomer?.google_maps_url || '');
   const [latitud, setLatitud] = useState<number | null>(savedCustomer?.latitud || null);
   const [longitud, setLongitud] = useState<number | null>(savedCustomer?.longitud || null);
+
+  // Autocompletado de dirección
+  const [sugerencias, setSugerencias] = useState<AddressSuggestion[]>([]);
+  const [buscandoDireccion, setBuscandoDireccion] = useState(false);
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
+  const debounceRef = React.useRef<any>(null);
+  const sugerenciasRef = React.useRef<HTMLDivElement>(null);
   
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'tarjeta' | 'transferencia'>('efectivo');
   const [pagaCon, setPagaCon] = useState('');
@@ -218,6 +225,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const handleAddressChange = (text: string) => {
     setDireccion(text);
 
+    // Detección de link o coordenadas de Google Maps
     const mapsCoordRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
     const qCoordRegex = /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/;
     const directCoordRegex = /^(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)$/;
@@ -229,6 +237,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setLatitud(lat);
       setLongitud(lon);
       setGoogleMapsUrl(`https://www.google.com/maps?q=${lat},${lon}`);
+      setSugerencias([]);
+      setMostrarSugerencias(false);
       return;
     }
 
@@ -239,12 +249,47 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setLatitud(lat);
       setLongitud(lon);
       setGoogleMapsUrl(`https://www.google.com/maps?q=${lat},${lon}`);
+      setSugerencias([]);
+      setMostrarSugerencias(false);
       return;
     }
 
     if (text.includes('maps.google.') || text.includes('goo.gl') || text.includes('google.com/maps')) {
       setGoogleMapsUrl(text.trim());
+      setSugerencias([]);
+      setMostrarSugerencias(false);
+      return;
     }
+
+    // Buscar sugerencias con debounce (400ms)
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (text.trim().length >= 3) {
+      setBuscandoDireccion(true);
+      debounceRef.current = setTimeout(async () => {
+        try {
+          const results = await searchAddress(text.trim(), 6);
+          setSugerencias(results);
+          setMostrarSugerencias(results.length > 0);
+        } catch {
+          setSugerencias([]);
+        } finally {
+          setBuscandoDireccion(false);
+        }
+      }, 400);
+    } else {
+      setSugerencias([]);
+      setMostrarSugerencias(false);
+      setBuscandoDireccion(false);
+    }
+  };
+
+  const handleSelectSuggestion = (s: AddressSuggestion) => {
+    setDireccion(s.direccion);
+    setLatitud(s.latitud);
+    setLongitud(s.longitud);
+    setGoogleMapsUrl(s.google_maps_url);
+    setSugerencias([]);
+    setMostrarSugerencias(false);
   };
 
   const handleUseGps = () => {
@@ -290,7 +335,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       scrollToTop();
       return;
     }
-    const cleanTel = telefonoLimpio.replace(/[\s\-\(\)]/g, '');
+    const cleanTel = telefonoLimpio.replace(/\D/g, '');
     if (!cleanTel || cleanTel.length < 8) {
       setErrorMsg('Ingresa un número de teléfono / WhatsApp válido (mínimo 8 dígitos).');
       scrollToTop();
@@ -648,14 +693,77 @@ ${lineasItems}
               </div>
 
               <div className="checkout-fields-grid">
-                <div className="checkout-input-group full-width">
-                  <input
-                    type="text"
-                    placeholder="Calle y número de puerta (Ej: 18 de Julio 240)"
-                    value={direccion}
-                    onChange={e => handleAddressChange(e.target.value)}
-                    className="checkout-input"
-                  />
+                <div className="checkout-input-group full-width" style={{ position: 'relative' }}>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      placeholder="Escribí tu calle y número (Ej: 18 de Julio 240)"
+                      value={direccion}
+                      onChange={e => handleAddressChange(e.target.value)}
+                      onFocus={() => { if (sugerencias.length > 0) setMostrarSugerencias(true); }}
+                      onBlur={() => { setTimeout(() => setMostrarSugerencias(false), 200); }}
+                      autoComplete="off"
+                      className="checkout-input"
+                      style={{ paddingRight: buscandoDireccion ? '36px' : undefined }}
+                    />
+                    {buscandoDireccion && (
+                      <Loader2 size={14} className="spinner-spin" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                    )}
+                  </div>
+
+                  {/* Dropdown de sugerencias tipo Google Maps */}
+                  {mostrarSugerencias && sugerencias.length > 0 && (
+                    <div
+                      ref={sugerenciasRef}
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        zIndex: 50,
+                        background: 'rgba(30, 30, 35, 0.98)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '0 0 10px 10px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                        maxHeight: '220px',
+                        overflowY: 'auto',
+                      }}
+                    >
+                      {sugerencias.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); handleSelectSuggestion(s); }}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '10px',
+                            padding: '10px 14px',
+                            background: 'transparent',
+                            border: 'none',
+                            borderBottom: i < sugerencias.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            color: '#e5e5e5',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <MapPin size={16} style={{ flexShrink: 0, marginTop: '2px', color: '#f87171' }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {s.direccion}
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {[s.ciudad, s.departamento, s.pais].filter(Boolean).join(', ')}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {googleMapsUrl && (
@@ -787,11 +895,20 @@ ${lineasItems}
             </div>
           </div>
 
+          {/* Alerta de error visible justo arriba del botón para móviles / iPhone */}
+          {errorMsg && (
+            <div className="checkout-error-banner" style={{ marginBottom: '10px' }}>
+              <AlertCircle size={16} />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
           {/* Botón de Enviar Pedido */}
           <button
             type="submit"
             disabled={enviando}
             className="btn-primary checkout-submit-btn"
+            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: enviando ? 'not-allowed' : 'pointer' }}
           >
             {enviando ? (
               <>
