@@ -155,6 +155,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   });
 
   const [buscandoGps, setBuscandoGps] = useState(false);
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  const scrollToTop = () => {
+    formRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     let timer: any;
@@ -171,7 +176,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   setGoogleUser(decoded);
                   if (decoded.email) setEmail(decoded.email);
                   if (decoded.name) setNombre(decoded.name);
-                  localStorage.setItem('biru_google_user', JSON.stringify(decoded));
+                  try {
+                    localStorage.setItem('biru_google_user', JSON.stringify(decoded));
+                  } catch {}
                   window.dispatchEvent(new Event('biru:google-login'));
                 }
               }
@@ -208,6 +215,38 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const costoEnvio = (tipoEntrega === 'delivery' && permiteDelivery) ? Number(marca?.costo_delivery || 60) : 0;
   const total = subtotal + costoEnvio;
 
+  const handleAddressChange = (text: string) => {
+    setDireccion(text);
+
+    const mapsCoordRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+    const qCoordRegex = /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/;
+    const directCoordRegex = /^(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)$/;
+
+    const match = text.match(mapsCoordRegex) || text.match(qCoordRegex);
+    if (match) {
+      const lat = parseFloat(match[1]);
+      const lon = parseFloat(match[2]);
+      setLatitud(lat);
+      setLongitud(lon);
+      setGoogleMapsUrl(`https://www.google.com/maps?q=${lat},${lon}`);
+      return;
+    }
+
+    const directMatch = text.trim().match(directCoordRegex);
+    if (directMatch) {
+      const lat = parseFloat(directMatch[1]);
+      const lon = parseFloat(directMatch[2]);
+      setLatitud(lat);
+      setLongitud(lon);
+      setGoogleMapsUrl(`https://www.google.com/maps?q=${lat},${lon}`);
+      return;
+    }
+
+    if (text.includes('maps.google.') || text.includes('goo.gl') || text.includes('google.com/maps')) {
+      setGoogleMapsUrl(text.trim());
+    }
+  };
+
   const handleUseGps = () => {
     if (!navigator.geolocation) {
       setErrorMsg('Tu navegador no soporta geolocalización.');
@@ -238,28 +277,45 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (enviando) return; // Prevenir doble-tap en iOS
     setErrorMsg('');
 
-    if (!nombre.trim()) {
+    // Limpiar espacios en campos clave (iOS Safari autocorrect puede agregar espacios)
+    const nombreLimpio = nombre.trim();
+    const emailLimpio = email.trim();
+    const telefonoLimpio = telefono.trim();
+
+    if (!nombreLimpio) {
       setErrorMsg('Por favor ingresa tu nombre completo.');
+      scrollToTop();
       return;
     }
-    if (!telefono.trim() || telefono.trim().length < 8) {
-      setErrorMsg('Ingresa un número de teléfono / WhatsApp válido.');
+    const cleanTel = telefonoLimpio.replace(/[\s\-\(\)]/g, '');
+    if (!cleanTel || cleanTel.length < 8) {
+      setErrorMsg('Ingresa un número de teléfono / WhatsApp válido (mínimo 8 dígitos).');
+      scrollToTop();
+      return;
+    }
+    if (emailLimpio && !emailLimpio.includes('@')) {
+      setErrorMsg('Si ingresas un email, por favor verifica que sea válido.');
+      scrollToTop();
       return;
     }
     if (tipoEntrega === 'delivery' && !direccion.trim()) {
       setErrorMsg('Por favor ingresa tu dirección de entrega en Tacuarembó.');
+      scrollToTop();
       return;
     }
 
+    // Deshabilitar botón inmediatamente después de validaciones
+    setEnviando(true);
+
     try {
-      setEnviando(true);
 
       const customerProfile = {
-        nombre: nombre.trim(),
-        email: email.trim(),
-        telefono: telefono.trim(),
+        nombre: nombreLimpio,
+        email: emailLimpio,
+        telefono: telefonoLimpio,
         fecha_nacimiento: fechaNacimiento.trim(),
         direccion: direccion.trim(),
         apartamento: apartamento.trim(),
@@ -267,18 +323,40 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         latitud,
         longitud,
       };
-      localStorage.setItem('biru_customer_profile', JSON.stringify(customerProfile));
+      try {
+        localStorage.setItem('biru_customer_profile', JSON.stringify(customerProfile));
+      } catch {}
+
+      const resolvedGmapsUrl =
+        googleMapsUrl ||
+        (direccion.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion.trim() + ', Tacuarembó')}` : '');
 
       const payload = {
         tenant_id: 6,
         marca_id: 4,
         tipo_pedido: tipoEntrega,
-        cliente_nombre: nombre.trim(),
-        cliente_telefono: telefono.trim(),
-        cliente_email: email.trim() || undefined,
+        canal: tipoEntrega === 'delivery' ? 'delivery' : 'take_away',
+        nombre_cliente_rapido: nombreLimpio,
+        cliente_nombre: nombreLimpio,
+        cliente_telefono: telefonoLimpio,
+        cliente_email: emailLimpio || undefined,
         cliente_fecha_nacimiento: parseFlexibleDate(fechaNacimiento).iso || undefined,
         direccion_entrega: tipoEntrega === 'delivery' ? `${direccion.trim()}${apartamento.trim() ? ` (${apartamento.trim()})` : ''}` : undefined,
-        google_maps_url: googleMapsUrl || undefined,
+        datos_delivery: {
+          nombre: nombreLimpio,
+          telefono: telefonoLimpio,
+          email: emailLimpio || undefined,
+          fecha_nacimiento: parseFlexibleDate(fechaNacimiento).iso || undefined,
+          direccion: direccion.trim(),
+          apartamento: apartamento.trim(),
+          google_maps_url: resolvedGmapsUrl || undefined,
+          latitud: latitud || undefined,
+          longitud: longitud || undefined,
+          costo_envio: costoEnvio,
+          metodo_pago: metodoPago,
+          paga_con: pagaCon.trim(),
+        },
+        google_maps_url: resolvedGmapsUrl || undefined,
         latitud: latitud || undefined,
         longitud: longitud || undefined,
         metodo_pago: metodoPago,
@@ -287,11 +365,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         total: total,
         notas: notas.trim() || undefined,
         items: items.map(it => ({
+          tipo_item: it.tipo,
+          producto_elaborado_id: it.tipo === 'elaborado' ? it.producto_id : null,
+          producto_reventa_id: it.tipo === 'reventa' ? it.producto_id : null,
+          nombre_producto: it.nombre,
           producto_id: it.producto_id,
           tipo: it.tipo,
           nombre: it.nombre,
           cantidad: it.cantidad,
           precio_unitario: it.precio_unitario,
+          subtotal: it.precio_unitario * it.cantidad,
+          notas_cocina: it.notas || undefined,
           notas: it.notas || undefined,
           modificadores: it.modificadores || [],
         })),
@@ -313,7 +397,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         ? (costoEnvio > 0 ? `🛵 Delivery ($${costoEnvio} UYU)` : '🛵 Delivery') 
         : '🏪 Retiro en Mostrador (Take Away) - Catalina 98';
       const dirTxt = tipoEntrega === 'delivery'
-        ? `\n📍 *Dirección:* ${direccion.trim()}${apartamento.trim() ? ` (${apartamento.trim()})` : ''}${googleMapsUrl ? `\n🗺️ *Ubicación Maps:* ${googleMapsUrl}` : ''}`
+        ? `\n📍 *Dirección:* ${direccion.trim()}${apartamento.trim() ? ` (${apartamento.trim()})` : ''}${resolvedGmapsUrl ? `\n🗺️ *Ubicación Maps:* ${resolvedGmapsUrl}` : ''}`
         : '';
 
       const pagoTxt =
@@ -325,6 +409,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
       const parsedBday = parseFlexibleDate(fechaNacimiento);
       const cumpleTxt = (parsedBday.display || fechaNacimiento.trim()) ? `\n🎂 *Cumpleaños:* ${parsedBday.display || fechaNacimiento.trim()}` : '';
+      const emailTxt = email.trim() ? `\n✉️ *Email:* ${email.trim()}` : '';
 
       const textoWhatsApp = `*¡Hola Biru Bar & Delivery Tacuarembó!* 🍔🍻🍕
 Acabo de realizar mi pedido desde la web oficial.
@@ -332,8 +417,7 @@ Acabo de realizar mi pedido desde la web oficial.
 📋 *Pedido #B${numOrden}*
 ${canalTxt}${dirTxt}
 👤 *Cliente:* ${nombre.trim()}
-📱 *Teléfono:* ${telefono.trim()}
-✉️ *Email:* ${email.trim()}${cumpleTxt}
+📱 *Teléfono:* ${telefono.trim()}${emailTxt}${cumpleTxt}
 💳 *Método de Pago:* ${pagoTxt}
 
 🛍️ *Detalle del Pedido:*
@@ -347,6 +431,7 @@ ${lineasItems}
     } catch (err: any) {
       console.error('Error enviando pedido:', err);
       setErrorMsg('Error de red al registrar el pedido. Probá nuevamente o contactanos por WhatsApp.');
+      scrollToTop();
     } finally {
       setEnviando(false);
     }
@@ -369,7 +454,12 @@ ${lineasItems}
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="checkout-modal-form">
+        <form
+          ref={formRef}
+          noValidate
+          onSubmit={handleSubmit}
+          className="checkout-modal-form"
+        >
           {errorMsg && (
             <div className="checkout-error-banner">
               <AlertCircle size={16} />
@@ -515,12 +605,15 @@ ${lineasItems}
               </div>
 
               <div className="checkout-input-group">
-                <label>Email (para aviso de estado)</label>
+                <label>Email (opcional, para aviso de estado)</label>
                 <input
                   type="email"
-                  placeholder="Ej: juan@gmail.com"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="Ej: juan@gmail.com (Opcional)"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
+                  onBlur={e => setEmail(e.target.value.trim())}
                   className="checkout-input"
                 />
               </div>
@@ -558,13 +651,40 @@ ${lineasItems}
                 <div className="checkout-input-group full-width">
                   <input
                     type="text"
-                    required
                     placeholder="Calle y número de puerta (Ej: 18 de Julio 240)"
                     value={direccion}
-                    onChange={e => setDireccion(e.target.value)}
+                    onChange={e => handleAddressChange(e.target.value)}
                     className="checkout-input"
                   />
                 </div>
+
+                {googleMapsUrl && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '0.75rem',
+                    background: 'rgba(16, 185, 129, 0.15)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    color: '#6ee7b7',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    gridColumn: '1 / -1'
+                  }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}>
+                      <Check size={14} /> Ubicación Google Maps verificada
+                    </span>
+                    <a
+                      href={googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#6ee7b7', fontWeight: 800, textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '3px' }}
+                    >
+                      <span>Ver en Maps</span>
+                      <ExternalLink size={11} />
+                    </a>
+                  </div>
+                )}
 
                 <div className="checkout-input-group full-width">
                   <input
