@@ -49,41 +49,92 @@ function decodeGoogleJwt(token: string): GoogleUserData | null {
   }
 }
 
+// Helper inteligente para parsear cualquier formato de fecha libre (DD/MM/AAAA, DDMMYY, DDMMYYYY, DD/MM, D/M/YY, etc.)
 export function parseFlexibleDate(val: string): { iso: string; display: string } {
   if (!val) return { iso: '', display: '' };
   const clean = val.trim();
+  const digits = clean.replace(/\D/g, '');
+
+  let d: number | null = null;
+  let mo: number | null = null;
+  let y: number | null = null;
+
+  // 1. Formato ISO: YYYY-MM-DD o YYYY/MM/DD
   let m = clean.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
   if (m) {
-    const y = m[1];
-    const mo = m[2].padStart(2, '0');
-    const d = m[3].padStart(2, '0');
-    return { iso: `${y}-${mo}-${d}`, display: `${d}/${mo}/${y}` };
+    y = parseInt(m[1], 10);
+    mo = parseInt(m[2], 10);
+    d = parseInt(m[3], 10);
   }
-  m = clean.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
-  if (m) {
-    const d = m[1].padStart(2, '0');
-    const mo = m[2].padStart(2, '0');
-    let y = m[3];
-    if (y.length === 2) {
-      const yrNum = parseInt(y, 10);
-      y = yrNum > 30 ? `19${y}` : `20${y}`;
+
+  // 2. Formato con separadores: DD/MM/AAAA o DD-MM-AAAA o DD/MM/YY
+  if (!d) {
+    m = clean.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
+    if (m) {
+      d = parseInt(m[1], 10);
+      mo = parseInt(m[2], 10);
+      let yr = parseInt(m[3], 10);
+      if (yr < 100) {
+        const cur = new Date().getFullYear() % 100;
+        yr = yr > cur ? 1900 + yr : 2000 + yr;
+      }
+      y = yr;
     }
-    return { iso: `${y}-${mo}-${d}`, display: `${d}/${mo}/${y}` };
   }
-  m = clean.match(/^(\d{2})(\d{2})(\d{4})$/);
-  if (m) {
-    const d = m[1];
-    const mo = m[2];
-    const y = m[3];
-    return { iso: `${y}-${mo}-${d}`, display: `${d}/${mo}/${y}` };
+
+  // 3. Formato solo números (sin separadores)
+  if (!d) {
+    if (digits.length === 8) {
+      // DDMMYYYY (ej: 05111994)
+      d = parseInt(digits.slice(0, 2), 10);
+      mo = parseInt(digits.slice(2, 4), 10);
+      y = parseInt(digits.slice(4, 8), 10);
+    } else if (digits.length === 6) {
+      // DDMMYY (ej: 051194 -> día 05, mes 11, año 1994)
+      d = parseInt(digits.slice(0, 2), 10);
+      mo = parseInt(digits.slice(2, 4), 10);
+      let yr = parseInt(digits.slice(4, 6), 10);
+      const cur = new Date().getFullYear() % 100;
+      yr = yr > cur ? 1900 + yr : 2000 + yr;
+      y = yr;
+    } else if (digits.length === 4) {
+      // DDMM (ej: 0511 -> día 05, mes 11)
+      d = parseInt(digits.slice(0, 2), 10);
+      mo = parseInt(digits.slice(2, 4), 10);
+    }
   }
-  m = clean.match(/^(\d{1,2})[-/.](\d{1,2})$/);
-  if (m) {
-    const d = m[1].padStart(2, '0');
-    const mo = m[2].padStart(2, '0');
-    return { iso: `2000-${mo}-${d}`, display: `${d}/${mo}` };
+
+  // 4. Formato solo día y mes con separadores: DD/MM o D-M
+  if (!d) {
+    m = clean.match(/^(\d{1,2})[-/.](\d{1,2})$/);
+    if (m) {
+      d = parseInt(m[1], 10);
+      mo = parseInt(m[2], 10);
+    }
   }
-  return { iso: clean, display: clean };
+
+  // Validación y normalización
+  if (d && mo) {
+    // Si usuario invirtió día y mes (ej: mes > 12 pero día <= 12)
+    if (mo > 12 && d <= 12) {
+      const tmp = d;
+      d = mo;
+      mo = tmp;
+    }
+
+    if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+      const dStr = String(d).padStart(2, '0');
+      const moStr = String(mo).padStart(2, '0');
+      if (y) {
+        return { iso: `${y}-${moStr}-${dStr}`, display: `${dStr}/${moStr}/${y}` };
+      } else {
+        return { iso: `2000-${moStr}-${dStr}`, display: `${dStr}/${moStr}` };
+      }
+    }
+  }
+
+  // Si no se puede reconocer como fecha válida, devolvemos iso vacío para que NUNCA rompa el backend
+  return { iso: '', display: clean };
 }
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
@@ -338,11 +389,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     try {
 
+      const parsedBday = parseFlexibleDate(fechaNacimiento);
+      const cleanIsoBday = parsedBday.iso || undefined;
+
       const customerProfile = {
         nombre: nombreLimpio,
         email: emailLimpio,
         telefono: telefonoLimpio,
-        fecha_nacimiento: fechaNacimiento.trim(),
+        fecha_nacimiento: parsedBday.display || fechaNacimiento.trim(),
         direccion: direccion.trim(),
         apartamento: apartamento.trim(),
         google_maps_url: googleMapsUrl,
@@ -366,13 +420,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         cliente_nombre: nombreLimpio,
         cliente_telefono: telefonoLimpio,
         cliente_email: emailLimpio || undefined,
-        cliente_fecha_nacimiento: parseFlexibleDate(fechaNacimiento).iso || undefined,
+        cliente_fecha_nacimiento: cleanIsoBday,
         direccion_entrega: tipoEntrega === 'delivery' ? `${direccion.trim()}${apartamento.trim() ? ` (${apartamento.trim()})` : ''}` : undefined,
         datos_delivery: {
           nombre: nombreLimpio,
           telefono: telefonoLimpio,
           email: emailLimpio || undefined,
-          fecha_nacimiento: parseFlexibleDate(fechaNacimiento).iso || undefined,
+          fecha_nacimiento: cleanIsoBday,
           direccion: direccion.trim(),
           apartamento: apartamento.trim(),
           google_maps_url: resolvedGmapsUrl || undefined,
@@ -441,7 +495,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           ? 'POS Tarjeta (Débito/Crédito)'
           : 'Transferencia Bancaria';
 
-      const parsedBday = parseFlexibleDate(fechaNacimiento);
       const cumpleTxt = (parsedBday.display || fechaNacimiento.trim()) ? `\n🎂 *Cumpleaños:* ${parsedBday.display || fechaNacimiento.trim()}` : '';
       const emailTxt = email.trim() ? `\n✉️ *Email:* ${email.trim()}` : '';
 
