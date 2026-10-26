@@ -1,10 +1,12 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   X, Plus, Minus, Trash2, Sparkles,
   ArrowRight, ChevronRight, ShoppingBag, Clock, Utensils
 } from 'lucide-react';
 import { ProductoElaborado, ProductoReventa, CartItem, MarcaInfo } from '../types/food';
 import { triggerHaptic } from '../utils/haptics';
+import { PedidoActivo } from './OrderStatusBanner';
+import { MisPedidosView } from './MisPedidosView';
 
 interface BiruPOSViewProps {
   isOpen: boolean;
@@ -12,6 +14,9 @@ interface BiruPOSViewProps {
   reventa: ProductoReventa[];
   cart: CartItem[];
   marca?: MarcaInfo;
+  activeOrders?: PedidoActivo[];
+  initialTab?: 'carrito' | 'pedidos';
+  customerEmail?: string | null;
   onClose: () => void;
   onUpdateQty: (id: string, delta: number) => void;
   onRemoveItem: (id: string) => void;
@@ -53,6 +58,9 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
   reventa,
   cart,
   marca,
+  activeOrders = [],
+  initialTab = 'carrito',
+  customerEmail = null,
   onClose,
   onUpdateQty,
   onRemoveItem,
@@ -61,9 +69,16 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
   onSelectPlatoParaPersonalizar,
   onOpenCheckout,
 }) => {
+  const [activeViewTab, setActiveViewTab] = useState<'carrito' | 'pedidos'>(initialTab);
   const [categoria, setCategoria] = useState('todos');
   const [mobileTab, setMobileTab] = useState<'menu' | 'pedido'>('menu');
   const [mobileUpsellCategory, setMobileUpsellCategory] = useState<string>('todos');
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveViewTab(initialTab);
+    }
+  }, [initialTab]);
 
   const categorias = useMemo(() => {
     const list = Array.from(new Set(platos.map(p => p.categoria || 'Burgers')));
@@ -151,7 +166,47 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
           </div>
         </div>
 
-        {/* Mobile tab switcher — fallback */}
+        {/* Selector inteligente de pestañas: Carrito vs Mis Pedidos */}
+        <div className="pos-nav-tabs">
+          <button
+            type="button"
+            className={`pos-nav-tab ${activeViewTab === 'carrito' ? 'active' : ''}`}
+            onClick={() => {
+              triggerHaptic('light');
+              setActiveViewTab('carrito');
+            }}
+          >
+            <ShoppingBag size={16} />
+            <span>Carrito {cartCount > 0 ? `(${cartCount})` : ''}</span>
+          </button>
+          <button
+            type="button"
+            className={`pos-nav-tab ${activeViewTab === 'pedidos' ? 'active' : ''} ${activeOrders.length > 0 ? 'pos-nav-tab--highlight' : ''}`}
+            onClick={() => {
+              triggerHaptic('light');
+              setActiveViewTab('pedidos');
+            }}
+          >
+            <Clock size={16} />
+            <span>Mis Pedidos {activeOrders.length > 0 ? `(${activeOrders.length})` : ''}</span>
+            {activeOrders.length > 0 && <span className="pos-tab-dot-pulse" />}
+          </button>
+        </div>
+
+        {activeViewTab === 'pedidos' ? (
+          <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '24px' }}>
+            <MisPedidosView
+              pedidos={activeOrders}
+              email={customerEmail}
+              onArmarNuevoPedido={() => {
+                triggerHaptic('light');
+                setActiveViewTab('carrito');
+              }}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Mobile tab switcher — fallback */}
         <div className="pos-mobile-tabs">
           <button
             className={`pos-mobile-tab ${mobileTab === 'menu' ? 'active' : ''}`}
@@ -591,6 +646,8 @@ export const BiruPOSView: React.FC<BiruPOSViewProps> = ({
             </div>
           )}
         </div>
+        </>
+        )}
 
       </div>
     </div>

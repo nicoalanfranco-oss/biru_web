@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
-import { OrderStatusBanner } from './components/OrderStatusBanner';
+import { OrderStatusBanner, PedidoActivo } from './components/OrderStatusBanner';
 import { HeroSection } from './components/HeroSection';
 import { MenuSection } from './components/MenuSection';
 import { StoryCultureSection } from './components/StoryCultureSection';
@@ -100,6 +100,26 @@ export const App: React.FC = () => {
   });
 
   const [mobileTab, setMobileTab] = useState<'inicio' | 'menu'>('inicio');
+  const [activeOrders, setActiveOrders] = useState<PedidoActivo[]>([]);
+  const [posInitialTab, setPosInitialTab] = useState<'carrito' | 'pedidos'>('carrito');
+
+  const getCustomerEmail = (): string | null => {
+    try {
+      const g = localStorage.getItem('biru_google_user');
+      if (g) {
+        const parsed = JSON.parse(g);
+        if (parsed?.email) return parsed.email;
+      }
+      const p = localStorage.getItem('biru_customer_profile');
+      if (p) {
+        const parsed = JSON.parse(p);
+        if (parsed?.email) return parsed.email;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -295,11 +315,20 @@ export const App: React.FC = () => {
         tenant={tenant}
         cartCount={cartCount}
         cartTotal={cartTotal}
-        onOpenCart={() => setIsCartOpen(true)}
+        onOpenCart={() => {
+          setPosInitialTab('carrito');
+          setIsCartOpen(true);
+        }}
       />
 
       {/* Banner de Estado de Pedido Activo */}
-      <OrderStatusBanner />
+      <OrderStatusBanner
+        onOpenMisPedidos={() => {
+          setPosInitialTab('pedidos');
+          setIsCartOpen(true);
+        }}
+        onPedidosChange={setActiveOrders}
+      />
 
       <main>
         {/* Hero Section */}
@@ -332,6 +361,7 @@ export const App: React.FC = () => {
         <MobileBottomNav
           activeTab={mobileTab}
           cartCount={cartCount}
+          activeOrdersCount={activeOrders.length}
           onNavigate={tab => {
             setMobileTab(tab);
             if (tab === 'inicio') {
@@ -340,7 +370,10 @@ export const App: React.FC = () => {
               handleExploreMenu();
             }
           }}
-          onOpenCart={() => setIsCartOpen(true)}
+          onOpenCart={(tab) => {
+            setPosInitialTab(tab || 'carrito');
+            setIsCartOpen(true);
+          }}
         />
       )}
 
@@ -369,6 +402,9 @@ export const App: React.FC = () => {
           reventa={reventa}
           cart={cart}
           marca={marca}
+          activeOrders={activeOrders}
+          initialTab={posInitialTab}
+          customerEmail={getCustomerEmail()}
           onClose={() => setIsCartOpen(false)}
           onUpdateQty={handleUpdateQty}
           onRemoveItem={handleRemoveItem}

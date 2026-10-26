@@ -4570,3 +4570,549 @@ button {
     align-self: flex-start;
   }
 }
+
+/* ==========================================================================
+   MIS PEDIDOS & BANNER VER DETALLE
+   ========================================================================== */
+.osb-ver-detalle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent-gold);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.osb-ver-detalle:hover {
+  background: rgba(245, 158, 11, 0.28);
+  transform: translateX(2px);
+}
+
+.pos-nav-tabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px;
+  border-radius: 12px;
+  gap: 6px;
+  margin: 0 16px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pos-nav-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.pos-nav-tab.active {
+  background: var(--bg-card);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pos-nav-tab--highlight:not(.active) {
+  color: var(--accent-gold);
+}
+
+.pos-tab-dot-pulse {
+  width: 8px;
+  height: 8px;
+  background: #10B981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+  animation: pulse-green 1.5s infinite;
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.mis-pedidos-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.mis-pedidos-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 20px;
+  gap: 14px;
+}
+
+.mis-pedidos-empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.mis-pedidos-empty-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.mis-pedidos-empty-sub {
+  font-size: 0.88rem;
+  color: var(--text-subtle);
+  max-width: 380px;
+  line-height: 1.5;
+}
+
+.mis-pedidos-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-gold);
+  color: #121316;
+  font-weight: 800;
+  font-size: 0.9rem;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: transform 0.2s ease;
+}
+
+.mis-pedidos-cta-btn:hover {
+  transform: translateY(-2px);
+}
+
+.mis-pedidos-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+
+.mis-pedidos-notice-icon {
+  flex-shrink: 0;
+}
+
+.mis-pedidos-notice-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8rem;
+  color: var(--text-subtle);
+  line-height: 1.35;
+}
+
+.mis-pedidos-notice-body strong {
+  color: var(--accent-gold);
+  font-size: 0.84rem;
+}
+
+.mis-pedidos-notice-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--accent-gold);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.mis-pedidos-notice-action:hover {
+  background: var(--accent-gold);
+  color: #121316;
+}
+
+.mis-pedidos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mis-pedidos-card {
+  background: rgba(26, 28, 32, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.2s ease;
+}
+
+.mis-pedidos-card.expanded {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.mis-pedidos-card-header {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.mis-pedidos-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mis-pedidos-badge-orden {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent-gold);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  font-weight: 900;
+  font-size: 0.95rem;
+  padding: 6px 10px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+}
+
+.mis-pedidos-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mis-pedidos-card-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.mis-pedidos-card-hora {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+}
+
+.mis-pedidos-card-estado-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.mis-pedidos-card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mis-pedidos-card-total {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--accent-gold);
+}
+
+.mis-pedidos-expand-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: var(--text-subtle);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mis-pedidos-stepper {
+  padding: 10px 18px 14px;
+  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.mis-pedidos-stepper-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.mis-pedidos-stepper-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-gold), #10B981);
+  transition: width 0.5s ease;
+}
+
+.mis-pedidos-steps-labels {
+  display: flex;
+  justify-content: space-between;
+}
+
+.mis-pedidos-step-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  color: var(--text-subtle);
+}
+
+.mis-pedidos-step-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mis-pedidos-step-node.done .mis-pedidos-step-dot {
+  background: var(--accent-gold);
+}
+
+.mis-pedidos-step-node.active {
+  color: #FFFFFF;
+  font-weight: 800;
+}
+
+.mis-pedidos-step-node.active .mis-pedidos-step-dot {
+  background: #10B981;
+  box-shadow: 0 0 6px #10B981;
+}
+
+.mis-pedidos-card-body {
+  padding: 16px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mis-pedidos-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  color: var(--text-subtle);
+  font-size: 0.85rem;
+}
+
+.mis-pedidos-items-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--accent-gold);
+}
+
+.mis-pedidos-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mis-pedidos-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.mis-pedidos-item-qty {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: var(--accent-gold);
+  min-width: 24px;
+}
+
+.mis-pedidos-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mis-pedidos-item-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.mis-pedidos-item-mods {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  line-height: 1.3;
+}
+
+.mis-pedidos-item-nota {
+  font-size: 0.72rem;
+  color: #F59E0B;
+  font-style: italic;
+}
+
+.mis-pedidos-item-subtotal {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+.mis-pedidos-totals-box {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mis-pedidos-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--text-subtle);
+}
+
+.mis-pedidos-total-row.total-highlight {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  margin-top: 4px;
+}
+
+.mis-pedidos-pago-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  margin-top: 2px;
+}
+
+.mis-pedidos-transfer-box {
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px dashed rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.mis-pedidos-comprobante-ok {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #10B981;
+  font-weight: 700;
+}
+
+.mis-pedidos-view-link {
+  color: var(--accent-gold);
+  text-decoration: underline;
+  margin-left: auto;
+  font-size: 0.75rem;
+}
+
+.mis-pedidos-comprobante-pending {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mis-pedidos-comprobante-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mis-pedidos-comprobante-text strong {
+  font-size: 0.8rem;
+  color: #FFFFFF;
+}
+
+.mis-pedidos-comprobante-text span {
+  font-size: 0.72rem;
+  color: var(--text-subtle);
+}
+
+.mis-pedidos-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-gold);
+  color: #121316;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mis-pedidos-card-actions {
+  padding-top: 4px;
+}
+
+.mis-pedidos-add-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--accent-gold);
+  border: 1px dashed rgba(245, 158, 11, 0.4);
+  padding: 11px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mis-pedidos-add-btn:hover {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: var(--accent-gold);
+}

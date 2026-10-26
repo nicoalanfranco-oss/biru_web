@@ -408,6 +408,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       };
 
       const res = await sendOrderToFood(payload);
+
+      // Si el pedido no se pudo registrar, mostrar error y NO vaciar el carrito
+      if (!res.success) {
+        setErrorMsg(res.error || 'No pudimos registrar tu pedido. Probá nuevamente o contactanos por WhatsApp.');
+        scrollToTop();
+        return;
+      }
+
       const numOrden = res.numero_orden || Math.floor(1000 + Math.random() * 9000);
 
       // Líneas de items para WhatsApp
