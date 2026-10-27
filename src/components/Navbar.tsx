@@ -26,7 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCart,
 }) => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(globalDeferredPrompt);
-  const [showInstall, setShowInstall] = useState(true);
+  const [showInstall, setShowInstall] = useState(Boolean(globalDeferredPrompt));
 
   useEffect(() => {
     const isStandalone =
@@ -39,6 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
     if (globalDeferredPrompt) {
       setDeferredPrompt(globalDeferredPrompt);
+      setShowInstall(true);
     }
 
     const handler = (e: Event) => {
@@ -64,20 +65,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const handleInstall = async () => {
     const promptToUse = deferredPrompt || globalDeferredPrompt;
-    if (promptToUse) {
-      try {
-        await promptToUse.prompt();
-        const { outcome } = await promptToUse.userChoice;
-        if (outcome === 'accepted') {
-          setShowInstall(false);
-        }
-        setDeferredPrompt(null);
-        globalDeferredPrompt = null;
-      } catch (err) {
-        console.warn('Install error:', err);
+    if (!promptToUse) return;
+    try {
+      await promptToUse.prompt();
+      const { outcome } = await promptToUse.userChoice;
+      if (outcome === 'accepted') {
+        setShowInstall(false);
       }
-    } else {
-      alert('Para instalar la App de Biru, toca el menú de tu navegador (⋮ o Compartir) y selecciona "Instalar aplicación" o "Agregar a inicio".');
+      setDeferredPrompt(null);
+      globalDeferredPrompt = null;
+    } catch (err) {
+      console.warn('Install error:', err);
     }
   };
 
