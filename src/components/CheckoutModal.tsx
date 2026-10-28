@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   X, CheckCircle, Bike, Store, ArrowRight, ShieldCheck, Send,
   MapPin, Navigation, ExternalLink, CreditCard, Banknote, Smartphone,
-  Search, Loader2, Check, UserCheck, AlertCircle, Sparkles
+  Search, Loader2, Check, UserCheck, AlertCircle, Sparkles, MessageCircle
 } from 'lucide-react';
 import { CartItem, MarcaInfo } from '../types/food';
 import { sendOrderToFood, searchAddress, AddressSuggestion } from '../services/api';
@@ -190,6 +190,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [notas, setNotas] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [errorRef, setErrorRef] = useState('');
+  const [errorFallbackWa, setErrorFallbackWa] = useState('');
 
   useEffect(() => {
     const allowed = [
@@ -356,6 +358,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     e.preventDefault();
     if (enviando) return; // Prevenir doble-tap en iOS
     setErrorMsg('');
+    setErrorRef('');
+    setErrorFallbackWa('');
 
     // Limpiar espacios en campos clave (iOS Safari autocorrect puede agregar espacios)
     const nombreLimpio = nombre.trim();
@@ -461,47 +465,37 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         })),
       };
 
-      const res = await sendOrderToFood(payload);
+      // Función helper para construir el mensaje estructurado de WhatsApp
+      const generarTextoWhatsApp = (etiquetaPedido: string, introCustom?: string) => {
+        const lineasItems = items.map(it => {
+          const mods = it.modificadores && it.modificadores.length > 0
+            ? `\n   ↳ ${it.modificadores.map(m => m.nombre).join(', ')}`
+            : '';
+          const notasItem = it.notas ? `\n   📝 Nota: ${it.notas}` : '';
+          return `*${it.cantidad}x ${it.nombre}* ($${it.precio_unitario * it.cantidad} UYU)${mods}${notasItem}`;
+        }).join('\n\n');
 
-      // Si el pedido no se pudo registrar, mostrar error y NO vaciar el carrito
-      if (!res.success) {
-        setErrorMsg(res.error || 'No pudimos registrar tu pedido. Probá nuevamente o contactanos por WhatsApp.');
-        scrollToTop();
-        return;
-      }
-
-      const numOrden = res.numero_orden || Math.floor(1000 + Math.random() * 9000);
-
-      // Líneas de items para WhatsApp
-      const lineasItems = items.map(it => {
-        const mods = it.modificadores && it.modificadores.length > 0
-          ? `\n   ↳ ${it.modificadores.map(m => m.nombre).join(', ')}`
+        const canalTxt = tipoEntrega === 'delivery' 
+          ? (costoEnvio > 0 ? `🛵 Delivery ($${costoEnvio} UYU)` : '🛵 Delivery') 
+          : '🏪 Retiro en Mostrador (Take Away) - Catalina 98';
+        const dirTxt = tipoEntrega === 'delivery'
+          ? `\n📍 *Dirección:* ${direccion.trim()}${apartamento.trim() ? ` (${apartamento.trim()})` : ''}${resolvedGmapsUrl ? `\n🗺️ *Ubicación Maps:* ${resolvedGmapsUrl}` : ''}`
           : '';
-        const notasItem = it.notas ? `\n   📝 Nota: ${it.notas}` : '';
-        return `*${it.cantidad}x ${it.nombre}* ($${it.precio_unitario * it.cantidad} UYU)${mods}${notasItem}`;
-      }).join('\n\n');
 
-      const canalTxt = tipoEntrega === 'delivery' 
-        ? (costoEnvio > 0 ? `🛵 Delivery ($${costoEnvio} UYU)` : '🛵 Delivery') 
-        : '🏪 Retiro en Mostrador (Take Away) - Catalina 98';
-      const dirTxt = tipoEntrega === 'delivery'
-        ? `\n📍 *Dirección:* ${direccion.trim()}${apartamento.trim() ? ` (${apartamento.trim()})` : ''}${resolvedGmapsUrl ? `\n🗺️ *Ubicación Maps:* ${resolvedGmapsUrl}` : ''}`
-        : '';
+        const pagoTxt =
+          metodoPago === 'efectivo'
+            ? `Efectivo${pagaCon.trim() ? ` (Paga con $${pagaCon.trim()})` : ''}`
+            : metodoPago === 'tarjeta'
+            ? 'POS Tarjeta (Débito/Crédito)'
+            : 'Transferencia Bancaria';
 
-      const pagoTxt =
-        metodoPago === 'efectivo'
-          ? `Efectivo${pagaCon.trim() ? ` (Paga con $${pagaCon.trim()})` : ''}`
-          : metodoPago === 'tarjeta'
-          ? 'POS Tarjeta (Débito/Crédito)'
-          : 'Transferencia Bancaria';
+        const cumpleTxt = (parsedBday.display || fechaNacimiento.trim()) ? `\n🎂 *Cumpleaños:* ${parsedBday.display || fechaNacimiento.trim()}` : '';
+        const emailTxt = email.trim() ? `\n✉️ *Email:* ${email.trim()}` : '';
 
-      const cumpleTxt = (parsedBday.display || fechaNacimiento.trim()) ? `\n🎂 *Cumpleaños:* ${parsedBday.display || fechaNacimiento.trim()}` : '';
-      const emailTxt = email.trim() ? `\n✉️ *Email:* ${email.trim()}` : '';
+        return `*¡Hola Biru Bar & Delivery Tacuarembó!* 🍔🍻🍕
+${introCustom || 'Acabo de realizar mi pedido desde la web oficial.'}
 
-      const textoWhatsApp = `*¡Hola Biru Bar & Delivery Tacuarembó!* 🍔🍻🍕
-Acabo de realizar mi pedido desde la web oficial.
-
-📋 *Pedido #B${numOrden}*
+📋 *${etiquetaPedido}*
 ${canalTxt}${dirTxt}
 👤 *Cliente:* ${nombre.trim()}
 📱 *Teléfono:* ${telefono.trim()}${emailTxt}${cumpleTxt}
@@ -511,17 +505,103 @@ ${canalTxt}${dirTxt}
 ${lineasItems}
 
 💰 *TOTAL A PAGAR: $${total} UYU*${notas.trim() ? `\n\n💬 *Comentarios:* ${notas.trim()}` : ''}`;
+      };
 
+      const res = await sendOrderToFood(payload);
+
+      // Si el pedido no se pudo registrar en la base de datos, NO vaciar el carrito y dar opción de enviar por WhatsApp
+      if (!res.success) {
+        const refCode = res.error_ref || ('BIRU-' + Math.random().toString(36).substring(2, 7).toUpperCase());
+        setErrorRef(refCode);
+        const fallbackMsg = generarTextoWhatsApp(
+          `Pedido Web (Ref: #${refCode})`,
+          `Intenté confirmar mi pedido en la web pero ocurrió una demora en el servidor (Ref: #${refCode}). Les paso mi pedido por acá para tomarlo enseguida:`
+        );
+        setErrorFallbackWa(`https://api.whatsapp.com/send?phone=59892033390&text=${encodeURIComponent(fallbackMsg)}`);
+        setErrorMsg(res.error || 'No pudimos registrar tu pedido en el sistema en este momento.');
+        scrollToTop();
+        return;
+      }
+
+      const numOrden = res.numero_orden || Math.floor(1000 + Math.random() * 9000);
+      const textoWhatsApp = generarTextoWhatsApp(`Pedido #B${numOrden}`);
       const whatsappUrl = `https://api.whatsapp.com/send?phone=59892033390&text=${encodeURIComponent(textoWhatsApp)}`;
 
       onOrderSuccess(numOrden, whatsappUrl, metodoPago, res.pedido_id);
     } catch (err: any) {
       console.error('Error enviando pedido:', err);
-      setErrorMsg('Error de red al registrar el pedido. Probá nuevamente o contactanos por WhatsApp.');
+      const refCode = 'ERR-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+      setErrorRef(refCode);
+      const fallbackMsg = `*¡Hola Biru Bar & Delivery Tacuarembó!* 🍔🍻🍕\nIntenté confirmar mi pedido en la web pero ocurrió un error de conexión (Ref: #${refCode}). Por favor contáctenme para tomarlo. Mi teléfono es ${telefono.trim()}.`;
+      setErrorFallbackWa(`https://api.whatsapp.com/send?phone=59892033390&text=${encodeURIComponent(fallbackMsg)}`);
+      setErrorMsg('Error de conexión al enviar el pedido. Podés tocar abajo para enviárnoslo por WhatsApp directamente.');
       scrollToTop();
     } finally {
       setEnviando(false);
     }
+  };
+
+  const renderErrorBanner = () => {
+    if (!errorMsg) return null;
+    return (
+      <div
+        style={{
+          background: 'rgba(239, 68, 68, 0.12)',
+          border: '1.5px solid rgba(239, 68, 68, 0.45)',
+          color: '#FECACA',
+          padding: '14px 16px',
+          borderRadius: 'var(--radius-md, 12px)',
+          fontSize: '0.85rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+          <AlertCircle size={20} style={{ flexShrink: 0, marginTop: '2px', color: '#EF4444' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '2px', color: '#F87171' }}>
+              No pudimos registrar tu pedido en el sistema
+            </div>
+            <div style={{ color: '#E2E8F0', fontSize: '0.82rem', lineHeight: '1.35' }}>
+              {errorMsg}
+            </div>
+            {errorRef && (
+              <div style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(239, 68, 68, 0.2)', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700, color: '#FCA5A5', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                <span>Código de seguimiento:</span>
+                <code style={{ fontFamily: 'monospace' }}>#{errorRef}</code>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {errorFallbackWa && (
+          <a
+            href={errorFallbackWa}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              background: '#25D366',
+              color: '#FFFFFF',
+              padding: '11px 16px',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              boxShadow: '0 2px 8px rgba(37, 211, 102, 0.35)',
+              textAlign: 'center',
+            }}
+          >
+            <MessageCircle size={18} />
+            <span>📲 Confirmar este pedido directo por WhatsApp</span>
+          </a>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -547,12 +627,7 @@ ${lineasItems}
           onSubmit={handleSubmit}
           className="checkout-modal-form"
         >
-          {errorMsg && (
-            <div className="checkout-error-banner">
-              <AlertCircle size={16} />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+          {renderErrorBanner()}
 
           {/* Sesión Google si está iniciada */}
           {googleUser && (
@@ -929,12 +1004,7 @@ ${lineasItems}
           </div>
 
           {/* Alerta de error visible justo arriba del botón para móviles / iPhone */}
-          {errorMsg && (
-            <div className="checkout-error-banner" style={{ marginBottom: '10px' }}>
-              <AlertCircle size={16} />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+          {renderErrorBanner()}
 
           {/* Botón de Enviar Pedido */}
           <button
