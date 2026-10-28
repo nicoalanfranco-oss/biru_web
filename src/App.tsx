@@ -153,6 +153,21 @@ export const App: React.FC = () => {
 
   useStructuredData({ tenant, marca, platos, reventa });
 
+  // Listener: cuando el pedido optimístico se sincroniza con la BD, actualizar el pedidoId real
+  useEffect(() => {
+    const handleOrderSynced = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.pedido_id) {
+        setOrderSuccessPedidoId(detail.pedido_id);
+      }
+      if (detail?.numero_orden) {
+        setOrderSuccessNumber(detail.numero_orden);
+      }
+    };
+    window.addEventListener('biru:order_synced', handleOrderSynced);
+    return () => window.removeEventListener('biru:order_synced', handleOrderSynced);
+  }, []);
+
   const cartCount = cart.reduce((acc, it) => acc + it.cantidad, 0);
   const cartTotal = cart.reduce((acc, it) => acc + it.precio_unitario * it.cantidad, 0);
 
@@ -277,11 +292,33 @@ export const App: React.FC = () => {
 
   const handleUploadComprobante = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !orderSuccessPedidoId) return;
+    if (!file) return;
+
+    // Si el pedidoId todavía no llegó (path optimístico), esperar hasta 10s a que se sincronice
+    let pedidoId = orderSuccessPedidoId;
+    if (!pedidoId) {
+      pedidoId = await new Promise<number | null>(resolve => {
+        const timeout = setTimeout(() => {
+          window.removeEventListener('biru:order_synced', handler);
+          resolve(null);
+        }, 10000);
+        const handler = (ev: Event) => {
+          const detail = (ev as CustomEvent).detail;
+          if (detail?.pedido_id) {
+            clearTimeout(timeout);
+            window.removeEventListener('biru:order_synced', handler);
+            resolve(detail.pedido_id);
+          }
+        };
+        window.addEventListener('biru:order_synced', handler);
+      });
+    }
+
+    if (!pedidoId) return;
 
     try {
       setUploadingComprobanteSuccess(true);
-      const res = await uploadComprobanteTransferencia(orderSuccessPedidoId, file);
+      const res = await uploadComprobanteTransferencia(pedidoId, file);
       if (res.success && res.comprobante_url) {
         setComprobanteUrlSuccess(res.comprobante_url);
       }
