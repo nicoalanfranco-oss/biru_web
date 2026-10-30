@@ -482,21 +482,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         costo_delivery: costoEnvio,
         total: total,
         notas: notas.trim() || undefined,
-        items: items.map(it => ({
-          tipo_item: it.tipo,
-          producto_elaborado_id: it.tipo === 'elaborado' ? it.producto_id : null,
-          producto_reventa_id: it.tipo === 'reventa' ? it.producto_id : null,
-          nombre_producto: it.nombre,
-          producto_id: it.producto_id,
-          tipo: it.tipo,
-          nombre: it.nombre,
-          cantidad: it.cantidad,
-          precio_unitario: it.precio_unitario,
-          subtotal: it.precio_unitario * it.cantidad,
-          notas_cocina: it.notas || undefined,
-          notas: it.notas || undefined,
-          modificadores: it.modificadores || [],
-        })),
+        items: items.map(it => {
+          const precioBaseItem = it.precio_base != null ? Number(it.precio_base) : Number(it.precio_unitario);
+          return {
+            tipo_item: it.tipo,
+            producto_elaborado_id: it.tipo === 'elaborado' ? it.producto_id : null,
+            producto_reventa_id: it.tipo === 'reventa' ? it.producto_id : null,
+            nombre_producto: it.nombre,
+            producto_id: it.producto_id,
+            tipo: it.tipo,
+            nombre: it.nombre,
+            cantidad: it.cantidad,
+            precio_base: precioBaseItem,
+            precio_unitario: precioBaseItem,
+            subtotal: precioBaseItem * it.cantidad,
+            notas_cocina: it.notas || undefined,
+            notas: it.notas || undefined,
+            modificadores: it.modificadores || [],
+          };
+        }),
       };
 
       // Función helper para construir el mensaje estructurado de WhatsApp
