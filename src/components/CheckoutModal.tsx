@@ -425,6 +425,33 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     // Deshabilitar botón inmediatamente después de validaciones
     setEnviando(true);
 
+    // Auto-geocodificar si el usuario escribió la dirección pero no seleccionó del autocompletado
+    // Esto garantiza que SIEMPRE tengamos coordenadas para el delivery
+    let resolvedLat = latitud;
+    let resolvedLon = longitud;
+    let resolvedGmapsUrl = googleMapsUrl;
+
+    if (tipoEntrega === 'delivery' && direccion.trim() && (!resolvedLat || !resolvedLon)) {
+      try {
+        const geoResults = await searchAddress(direccion.trim(), 6);
+        if (geoResults.length > 0) {
+          const best = geoResults[0];
+          resolvedLat = best.latitud;
+          resolvedLon = best.longitud;
+          resolvedGmapsUrl = best.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${best.latitud},${best.longitud}`;
+          setLatitud(resolvedLat);
+          setLongitud(resolvedLon);
+          setGoogleMapsUrl(resolvedGmapsUrl);
+        }
+      } catch {
+        // Si falla el geocode, continuar sin coordenadas — el pedido se envía igual con la dirección en texto
+      }
+    }
+
+    if (!resolvedGmapsUrl && direccion.trim()) {
+      resolvedGmapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion.trim() + ', Tacuarembó')}`;
+    }
+
     try {
 
       const parsedBday = parseFlexibleDate(fechaNacimiento);
@@ -437,17 +464,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         fecha_nacimiento: parsedBday.display || fechaNacimiento.trim(),
         direccion: direccion.trim(),
         apartamento: apartamento.trim(),
-        google_maps_url: googleMapsUrl,
-        latitud,
-        longitud,
+        google_maps_url: resolvedGmapsUrl || '',
+        latitud: resolvedLat,
+        longitud: resolvedLon,
       };
       try {
         localStorage.setItem('biru_customer_profile', JSON.stringify(customerProfile));
       } catch {}
-
-      const resolvedGmapsUrl =
-        googleMapsUrl ||
-        (direccion.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion.trim() + ', Tacuarembó')}` : '');
 
       const payload = {
         tenant_id: 6,
@@ -468,15 +491,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           direccion: direccion.trim(),
           apartamento: apartamento.trim(),
           google_maps_url: resolvedGmapsUrl || undefined,
-          latitud: latitud || undefined,
-          longitud: longitud || undefined,
+          latitud: resolvedLat || undefined,
+          longitud: resolvedLon || undefined,
           costo_envio: costoEnvio,
           metodo_pago: metodoPago,
           paga_con: pagaCon.trim(),
         },
         google_maps_url: resolvedGmapsUrl || undefined,
-        latitud: latitud || undefined,
-        longitud: longitud || undefined,
+        latitud: resolvedLat || undefined,
+        longitud: resolvedLon || undefined,
         metodo_pago: metodoPago,
         paga_con: metodoPago === 'efectivo' && pagaCon.trim() ? Number(pagaCon.trim()) : undefined,
         costo_delivery: costoEnvio,
