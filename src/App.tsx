@@ -15,6 +15,7 @@ import { fetchBiruCatalogo, uploadComprobanteTransferencia, TENANT_INFO, MARCA_I
 import { useStructuredData } from './hooks/useStructuredData';
 import { CheckCircle2, Sparkles, Bell, ArrowRight, WifiOff, Paperclip, MessageCircle, Copy, Check, Clock } from 'lucide-react';
 import { triggerHaptic } from './utils/haptics';
+import { launchConfetti } from './utils/confetti';
 
 const InstagramIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
   <svg
@@ -260,6 +261,7 @@ export const App: React.FC = () => {
   };
 
   const handleOrderSuccess = (orderNumber: number, whatsappUrl?: string, paymentMethod?: 'efectivo' | 'tarjeta' | 'transferencia', pedidoId?: number) => {
+    launchConfetti(1600);
     setOrderSuccessNumber(orderNumber);
     setOrderSuccessPedidoId(pedidoId || null);
     setComprobanteUrlSuccess(null);
@@ -347,6 +349,15 @@ export const App: React.FC = () => {
       )}
 
       {/* Navbar Superior */}
+      {/* Banner de Estado de Pedido Activo (Pantalla superior en 0ms) */}
+      <OrderStatusBanner
+        onOpenMisPedidos={() => {
+          setPosInitialTab('pedidos');
+          setIsCartOpen(true);
+        }}
+        onPedidosChange={setActiveOrders}
+      />
+
       <Navbar
         marca={marca}
         tenant={tenant}
@@ -356,15 +367,6 @@ export const App: React.FC = () => {
           setPosInitialTab('carrito');
           setIsCartOpen(true);
         }}
-      />
-
-      {/* Banner de Estado de Pedido Activo */}
-      <OrderStatusBanner
-        onOpenMisPedidos={() => {
-          setPosInitialTab('pedidos');
-          setIsCartOpen(true);
-        }}
-        onPedidosChange={setActiveOrders}
       />
 
       <main>
@@ -476,6 +478,33 @@ export const App: React.FC = () => {
             className="modal-container order-success-modal-biru"
             onClick={e => e.stopPropagation()}
           >
+            {/* Banner de Confirmación Ineludible (Punto 1) */}
+            <div
+              style={{
+                width: '100%',
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                color: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '12px 14px',
+                marginBottom: '14px',
+                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ fontSize: '1.6rem', lineHeight: 1 }}>🎉</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.94rem', fontWeight: 900, letterSpacing: '0.2px' }}>
+                  ¡PEDIDO CONFIRMADO CON ÉXITO!
+                </div>
+                <div style={{ fontSize: '0.78rem', opacity: 0.95, fontWeight: 600 }}>
+                  Podés consultarlo y seguir su avance en la pantalla principal.
+                </div>
+              </div>
+            </div>
+
             <div className="success-header-row">
               <img src="/logo_biru.jpg" alt="Biru" className="success-brand-logo" />
               <div className="success-badge-confirmed">

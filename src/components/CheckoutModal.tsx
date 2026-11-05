@@ -5,7 +5,8 @@ import {
   Search, Loader2, Check, UserCheck, AlertCircle, Sparkles, MessageCircle
 } from 'lucide-react';
 import { CartItem, MarcaInfo } from '../types/food';
-import { sendOrderToFood, searchAddress, AddressSuggestion } from '../services/api';
+import { sendOrderToFood, searchAddress, AddressSuggestion, consultarPedidoActivoPorTelefono } from '../services/api';
+import { launchConfetti } from '../utils/confetti';
 
 const GOOGLE_CLIENT_ID = '713780303554-41bctfqdhvu5nc81sctj1qci2mvekviu.apps.googleusercontent.com';
 
@@ -224,6 +225,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [errorRef, setErrorRef] = useState('');
   const [errorFallbackWa, setErrorFallbackWa] = useState('');
 
+  // Prevención ultra rápida de pedidos duplicados
+  const [pedidoActivoDetectado, setPedidoActivoDetectado] = useState<any | null>(null);
+  const [, setVerificandoActivo] = useState(false);
+  const skipDuplicateCheckRef = React.useRef(false);
+
   useEffect(() => {
     const allowed = [
       marca?.permite_efectivo !== false ? 'efectivo' : null,
@@ -422,6 +428,36 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       return;
     }
 
+    // ── 1. Chequeo ultra rápido de pedidos previos activos (Punto 4 de prevención de duplicados) ──
+    if (!skipDuplicateCheckRef.current) {
+      setVerificandoActivo(true);
+      try {
+        const rawLocal = localStorage.getItem('biru_recent_orders');
+        let recienteLocal: any = null;
+        if (rawLocal) {
+          const list = JSON.parse(rawLocal);
+          const arrayList = Array.isArray(list) ? list : [list];
+          recienteLocal = arrayList.find((p: any) => {
+            const h = Date.now() - new Date(p.created_at).getTime();
+            return h < 2.5 * 3600 * 1000 && (p.estado as string) !== 'entregado' && (p.estado as string) !== 'cancelado';
+          });
+        }
+
+        const checkBackend = await consultarPedidoActivoPorTelefono(cleanTel, 6, marca?.marca_id || 4);
+        const activo = (checkBackend.tiene_activo && checkBackend.pedido) ? checkBackend.pedido : recienteLocal;
+
+        if (activo) {
+          setPedidoActivoDetectado(activo);
+          setVerificandoActivo(false);
+          return;
+        }
+      } catch {
+        // Continuar sin bloquear
+      } finally {
+        setVerificandoActivo(false);
+      }
+    }
+
     // Deshabilitar botón inmediatamente después de validaciones
     setEnviando(true);
 
@@ -451,6 +487,43 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (!resolvedGmapsUrl && direccion.trim()) {
       resolvedGmapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion.trim() + ', Tacuarembó')}`;
     }
+
+    const triggerSuccessAndSaveCache = (
+      orderNum: number,
+      waUrl: string,
+      method?: any,
+      pedidoId?: number,
+      initialStatus: 'esperando_confirmacion' | 'en_cocina' = 'en_cocina'
+    ) => {
+      launchConfetti(1600);
+
+      const nuevoRegistro = {
+        pedido_id: pedidoId || orderNum,
+        numero_orden: orderNum,
+        tipo_pedido: tipoEntrega,
+        estado: initialStatus,
+        created_at: new Date().toISOString(),
+        enviado_cocina_at: new Date().toISOString(),
+        metodo_pago: method || metodoPago,
+        telefono: telefonoLimpio,
+        nombre: nombreLimpio,
+        total: total,
+      };
+
+      try {
+        const raw = localStorage.getItem('biru_recent_orders');
+        const list = raw ? JSON.parse(raw) : [];
+        const arr = Array.isArray(list) ? list : [list];
+        const sinDupl = arr.filter((p: any) => p.numero_orden !== orderNum);
+        localStorage.setItem('biru_recent_orders', JSON.stringify([nuevoRegistro, ...sinDupl]));
+      } catch {}
+
+      window.dispatchEvent(new CustomEvent('biru:order_status_updated', {
+        detail: nuevoRegistro
+      }));
+
+      onOrderSuccess(orderNum, waUrl, method, pedidoId);
+    };
 
     try {
 
@@ -584,7 +657,7 @@ ${lineasItems}
 
       if ('fastTimeout' in raceResult) {
         // El servidor tardó más de 2s: CERO DEMORA Y CERO ERROR para el cliente
-        onOrderSuccess(numOrdenOptimista, whatsappUrlOptimista, metodoPago, undefined);
+        triggerSuccessAndSaveCache(numOrdenOptimista, whatsappUrlOptimista, metodoPago, undefined, 'esperando_confirmacion');
 
         // En segundo plano el servidor sigue procesando; cuando responda actualizamos el ID silenciosamente
         sendPromise.then(res => {
@@ -602,10 +675,10 @@ ${lineasItems}
         const numOrdenReal = res.numero_orden || numOrdenOptimista;
         const textoWhatsAppReal = generarTextoWhatsApp(`Pedido #B${numOrdenReal}`);
         const whatsappUrlReal = `https://api.whatsapp.com/send?phone=59892033390&text=${encodeURIComponent(textoWhatsAppReal)}`;
-        onOrderSuccess(numOrdenReal, whatsappUrlReal, metodoPago, res.pedido_id);
+        triggerSuccessAndSaveCache(numOrdenReal, whatsappUrlReal, metodoPago, res.pedido_id, 'en_cocina');
       } else {
         // Backend reporta intermitencia: confirmamos optimísticamente al cliente de todas formas
-        onOrderSuccess(numOrdenOptimista, whatsappUrlOptimista, metodoPago, undefined);
+        triggerSuccessAndSaveCache(numOrdenOptimista, whatsappUrlOptimista, metodoPago, undefined, 'en_cocina');
       }
     } catch (err: any) {
       console.error('Error enviando pedido:', err);
@@ -613,7 +686,7 @@ ${lineasItems}
       const waUrl = `https://api.whatsapp.com/send?phone=59892033390&text=${encodeURIComponent(
         `*¡Hola Biru Bar & Delivery Tacuarembó!* 🍔🍻🍕\nAcabo de realizar mi pedido desde la web oficial (Orden #B${numOrdenEmergencia}). Mi nombre es ${nombre.trim()} y mi teléfono es ${telefono.trim()}.`
       )}`;
-      onOrderSuccess(numOrdenEmergencia, waUrl, metodoPago, undefined);
+      triggerSuccessAndSaveCache(numOrdenEmergencia, waUrl, metodoPago, undefined, 'en_cocina');
     } finally {
       setEnviando(false);
     }
@@ -684,6 +757,158 @@ ${lineasItems}
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
+      {/* ⚠️ Diálogo de Advertencia Anti-Duplicados (Punto 4) */}
+      {pedidoActivoDetectado && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 9999,
+            background: 'rgba(15, 23, 42, 0.82)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div
+            style={{
+              maxWidth: '430px',
+              width: '100%',
+              padding: '24px 22px',
+              borderRadius: '24px',
+              background: '#1F2937',
+              border: '1.5px solid rgba(245, 158, 11, 0.3)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              color: '#F9FAFB',
+            }}
+          >
+            <div
+              style={{
+                width: '54px',
+                height: '54px',
+                borderRadius: '50%',
+                background: 'rgba(245, 158, 11, 0.15)',
+                color: '#F59E0B',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '12px',
+                border: '2px solid rgba(245, 158, 11, 0.35)',
+              }}
+            >
+              <AlertCircle size={30} strokeWidth={2.5} />
+            </div>
+
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#F9FAFB', margin: '0 0 8px' }}>
+              Ya tenés un pedido en curso
+            </h3>
+
+            <p style={{ fontSize: '0.88rem', color: '#9CA3AF', lineHeight: 1.45, margin: '0 0 14px' }}>
+              Hola <strong>{nombre.trim() || 'cliente'}</strong>, registramos tu orden{' '}
+              <strong style={{ color: '#F59E0B' }}>#{pedidoActivoDetectado.numero_orden}</strong>
+              {pedidoActivoDetectado.minutos_hace != null
+                ? ` hace aprox. ${pedidoActivoDetectado.minutos_hace} min`
+                : ''}{' '}
+              que ya está en cocina.
+            </p>
+
+            {pedidoActivoDetectado.items_resumen && (
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  padding: '10px 12px',
+                  fontSize: '0.78rem',
+                  color: '#D1D5DB',
+                  marginBottom: '16px',
+                  textAlign: 'left',
+                  width: '100%',
+                }}
+              >
+                <span style={{ fontWeight: 700, display: 'block', color: '#F3F4F6', marginBottom: '2px' }}>
+                  Platos de tu pedido anterior:
+                </span>
+                {pedidoActivoDetectado.items_resumen}
+              </div>
+            )}
+
+            <p style={{ fontSize: '0.84rem', fontWeight: 700, color: '#F9FAFB', margin: '0 0 16px' }}>
+              ¿Querés ver el estado de tu pedido anterior o confirmar un <u>nuevo pedido adicional</u>?
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const targetActivo = pedidoActivoDetectado;
+                  setPedidoActivoDetectado(null);
+                  onClose();
+                  window.dispatchEvent(
+                    new CustomEvent('biru:order_status_updated', {
+                      detail: targetActivo,
+                    })
+                  );
+                }}
+                style={{
+                  width: '100%',
+                  padding: '13px',
+                  borderRadius: '14px',
+                  background: '#10B981',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: '0.92rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
+                }}
+              >
+                <CheckCircle size={18} />
+                <span>Ver mi pedido actual (No duplicar)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  skipDuplicateCheckRef.current = true;
+                  setPedidoActivoDetectado(null);
+                  setEnviando(true);
+                  setTimeout(() => {
+                    if (formRef.current) {
+                      formRef.current.requestSubmit();
+                    }
+                  }, 50);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '14px',
+                  background: 'transparent',
+                  color: '#9CA3AF',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  cursor: 'pointer',
+                }}
+              >
+                Sí, es un pedido diferente (Confirmar nuevo pedido)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         className="modal-container modal-checkout-biru"
         onClick={e => e.stopPropagation()}

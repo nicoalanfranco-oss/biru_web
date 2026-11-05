@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChefHat, Bike, CheckCircle2, Package, X, Paperclip, Loader2, Clock, ChevronRight } from 'lucide-react';
 import { FOOD_BACKEND_URL, uploadComprobanteTransferencia } from '../services/api';
 
-export type EstadoPedido = 'en_cocina' | 'listo' | 'en_camino' | 'abierto';
+export type EstadoPedido = 'esperando_confirmacion' | 'en_cocina' | 'listo' | 'en_camino' | 'abierto';
 
 export interface PedidoActivo {
   pedido_id: number;
@@ -22,6 +22,14 @@ const ESTADOS_CONFIG: Record<
   EstadoPedido,
   { label: string; shortLabel: string; sublabel: string; icon: React.ReactNode; colorClass: string; step: number }
 > = {
+  esperando_confirmacion: {
+    label: 'Esperando confirmación de cocina...',
+    shortLabel: 'Procesando ⏳',
+    sublabel: 'Tu orden fue enviada. Esperando ingreso a cocina…',
+    icon: <Clock size={18} className="osb-spin" />,
+    colorClass: 'osb-estado-esperando',
+    step: 0,
+  },
   abierto: {
     label: 'Pedido recibido',
     shortLabel: 'Recibido 📦',
@@ -56,7 +64,26 @@ const ESTADOS_CONFIG: Record<
   },
 };
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 20_000;
+
+// ─── Helpers de Caché Local Inteligente (0ms) ─────────────────────────────────
+function getRecentCachedOrders(): PedidoActivo[] {
+  try {
+    const raw = localStorage.getItem('biru_recent_orders');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    const list: PedidoActivo[] = Array.isArray(parsed) ? parsed : [parsed];
+    const now = Date.now();
+    const threeHours = 3 * 60 * 60 * 1000;
+    return list.filter(item => {
+      if (!item || !item.numero_orden) return false;
+      const createdAt = item.created_at ? new Date(item.created_at).getTime() : now;
+      return now - createdAt < threeHours && (item.estado as string) !== 'entregado' && (item.estado as string) !== 'cancelado';
+    });
+  } catch {
+    return [];
+  }
+}
 
 interface OrderStatusBannerProps {
   onOpenMisPedidos?: () => void;
@@ -64,16 +91,23 @@ interface OrderStatusBannerProps {
 }
 
 export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisPedidos, onPedidosChange }) => {
-  const [pedidos, setPedidos] = useState<PedidoActivo[]>([]);
-  const [selectedPedidoId, setSelectedPedidoId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
+  const initialCache = getRecentCachedOrders();
+  const [pedidos, setPedidos] = useState<PedidoActivo[]>(initialCache);
+  const [selectedPedidoId, setSelectedPedidoId] = useState<number | null>(() => initialCache[0]?.pedido_id || null);
+  const [, setLoading] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => initialCache.length > 0);
   const [animatingOut, setAnimatingOut] = useState(false);
   const [uploadingComprobante, setUploadingComprobante] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const prevCountRef = useRef<number>(0);
+  const prevCountRef = useRef<number>(initialCache.length);
+
+  useEffect(() => {
+    if (initialCache.length > 0) {
+      onPedidosChange?.(initialCache);
+    }
+  }, []); // eslint-disable-line
 
   const getEmail = useCallback((): string | null => {
     try {
@@ -86,6 +120,25 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
       if (p) {
         const parsed = JSON.parse(p);
         if (parsed?.email) return parsed.email;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const getTelefono = useCallback((): string | null => {
+    try {
+      const p = localStorage.getItem('biru_customer_profile');
+      if (p) {
+        const parsed = JSON.parse(p);
+        if (parsed?.telefono) return parsed.telefono;
+      }
+      const raw = localStorage.getItem('biru_recent_orders');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed[0]?.telefono) return parsed[0].telefono;
+        if (parsed?.telefono) return parsed.telefono;
       }
       return null;
     } catch {
@@ -114,22 +167,40 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
 
   const fetchEstado = useCallback(async () => {
     const email = getEmail();
-    if (!email) {
-      onPedidosChange?.([]);
+    const tel = getTelefono();
+
+    if (!email && !tel) {
+      const cached = getRecentCachedOrders();
+      if (cached.length > 0) {
+        setPedidos(cached);
+        setVisible(true);
+        onPedidosChange?.(cached);
+      }
       return;
     }
 
     try {
-      const url = `${FOOD_BACKEND_URL}/api/public/pedido-estado?email=${encodeURIComponent(email)}&tenant_id=6`;
+      const params = new URLSearchParams({ tenant_id: '6' });
+      if (email) params.set('email', email);
+      if (tel) params.set('telefono', tel);
+
+      const url = `${FOOD_BACKEND_URL}/api/public/pedido-estado?${params.toString()}`;
       const res = await fetch(url, { headers: { Accept: 'application/json' } });
       if (!res.ok) return;
 
       const data = await res.json();
       const lista: PedidoActivo[] = data.pedidos || (data.pedido ? [data.pedido] : []);
 
-      onPedidosChange?.(lista);
-
       if (lista.length === 0) {
+        const cached = getRecentCachedOrders();
+        const reciente = cached.filter(c => Date.now() - new Date(c.created_at).getTime() < 10 * 60 * 1000);
+        if (reciente.length > 0) {
+          setPedidos(reciente);
+          setVisible(true);
+          onPedidosChange?.(reciente);
+          return;
+        }
+
         if (pedidos.length > 0) {
           setAnimatingOut(true);
           setTimeout(() => {
@@ -137,10 +208,18 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
             setSelectedPedidoId(null);
             setVisible(false);
             setAnimatingOut(false);
+            onPedidosChange?.([]);
+            try { localStorage.removeItem('biru_recent_orders'); } catch {}
           }, 500);
         }
         return;
       }
+
+      try {
+        localStorage.setItem('biru_recent_orders', JSON.stringify(lista));
+      } catch {}
+
+      onPedidosChange?.(lista);
 
       if (lista.length !== prevCountRef.current) {
         prevCountRef.current = lista.length;
@@ -157,40 +236,66 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
       });
       setVisible(true);
     } catch {
-      // Ignorar errores de conexión transitorios
+      // Silencioso
     } finally {
       setLoading(false);
     }
-  }, [getEmail, onPedidosChange, pedidos.length]);
+  }, [getEmail, getTelefono, onPedidosChange, pedidos.length]);
 
   useEffect(() => {
-    const email = getEmail();
-    if (!email) return;
-
-    setLoading(true);
     fetchEstado();
 
     intervalRef.current = setInterval(fetchEstado, POLL_INTERVAL_MS);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [fetchEstado, getEmail]);
+  }, []); // eslint-disable-line
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      const detail = e?.detail;
+      const cached = getRecentCachedOrders();
+      if (detail && detail.numero_orden) {
+        const itemNuevo: PedidoActivo = {
+          pedido_id: detail.pedido_id || detail.numero_orden,
+          numero_orden: detail.numero_orden,
+          tipo_pedido: detail.tipo_pedido || 'delivery',
+          estado: detail.estado || 'esperando_confirmacion',
+          created_at: detail.created_at || new Date().toISOString(),
+          enviado_cocina_at: detail.enviado_cocina_at || null,
+          listo_cocina_at: null,
+          metodo_pago: detail.metodo_pago,
+        };
+
+        const listSinDupl = cached.filter(p => p.numero_orden !== itemNuevo.numero_orden);
+        const updated = [itemNuevo, ...listSinDupl];
+        try { localStorage.setItem('biru_recent_orders', JSON.stringify(updated)); } catch {}
+        setPedidos(updated);
+        setSelectedPedidoId(itemNuevo.pedido_id);
+        setVisible(true);
+        setDismissed(false);
+        onPedidosChange?.(updated);
+      } else if (cached.length > 0) {
+        setPedidos(cached);
+        setVisible(true);
+        setDismissed(false);
+        onPedidosChange?.(cached);
+      }
+      fetchEstado();
+    };
+
+    window.addEventListener('biru:order_status_updated', handler);
+    window.addEventListener('biru:order_synced', handler);
+    return () => {
+      window.removeEventListener('biru:order_status_updated', handler);
+      window.removeEventListener('biru:order_synced', handler);
+    };
+  }, [fetchEstado, onPedidosChange]);
 
   useEffect(() => {
     const handler = (e: StorageEvent) => {
-      if (e.key === 'biru_google_user') {
-        if (e.newValue) {
-          setLoading(true);
-          fetchEstado();
-          if (!intervalRef.current) {
-            intervalRef.current = setInterval(fetchEstado, POLL_INTERVAL_MS);
-          }
-        } else {
-          setPedidos([]);
-          setSelectedPedidoId(null);
-          setVisible(false);
-          if (intervalRef.current) clearInterval(intervalRef.current);
-        }
+      if (e.key === 'biru_google_user' || e.key === 'biru_recent_orders') {
+        fetchEstado();
       }
     };
     window.addEventListener('storage', handler);
@@ -199,11 +304,7 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
 
   useEffect(() => {
     const handler = () => {
-      setLoading(true);
       fetchEstado();
-      if (!intervalRef.current) {
-        intervalRef.current = setInterval(fetchEstado, POLL_INTERVAL_MS);
-      }
     };
     window.addEventListener('biru:google-login', handler);
     return () => window.removeEventListener('biru:google-login', handler);
@@ -238,7 +339,7 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
     }
   };
 
-  if (!getEmail() || pedidos.length === 0 || dismissed || !visible || !currentPedido) {
+  if (pedidos.length === 0 || dismissed || !visible || !currentPedido) {
     return null;
   }
 

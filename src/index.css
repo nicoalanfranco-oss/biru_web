@@ -3964,6 +3964,7 @@ button {
   transition: all var(--transition-normal);
 }
 
+.osb-wrapper.osb-estado-esperando,
 .osb-wrapper.osb-estado-cocina {
   border-left: 4px solid var(--accent-gold);
 }
