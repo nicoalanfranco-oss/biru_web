@@ -494,7 +494,28 @@ export const App: React.FC = () => {
                 textAlign: 'left',
               }}
             >
-              <div style={{ fontSize: '1.6rem', lineHeight: 1 }}>🎉</div>
+              <div
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '10px',
+                  background: '#FFFFFF',
+                  padding: '3px',
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1.5px solid rgba(255, 255, 255, 0.4)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  overflow: 'hidden',
+                }}
+              >
+                <img
+                  src={marca?.logo_url || '/logo_biru.jpg'}
+                  alt={marca?.nombre || 'Biru Burgers'}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '0.94rem', fontWeight: 900, letterSpacing: '0.2px' }}>
                   ¡PEDIDO CONFIRMADO CON ÉXITO!
@@ -506,7 +527,7 @@ export const App: React.FC = () => {
             </div>
 
             <div className="success-header-row">
-              <img src="/logo_biru.jpg" alt="Biru" className="success-brand-logo" />
+              <img src={marca?.logo_url || '/logo_biru.jpg'} alt={marca?.nombre || 'Biru'} className="success-brand-logo" />
               <div className="success-badge-confirmed">
                 <CheckCircle2 size={16} />
                 <span>{marca?.estado_atencion && !marca.estado_atencion.abierto_ahora ? '¡Pedido Confirmado!' : '¡Pedido Recibido!'}</span>
