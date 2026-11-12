@@ -1,4 +1,6 @@
-const CACHE_NAME = 'biru-web-v1';
+const BUILD_TIMESTAMP = '1794496771410';
+const CACHE_NAME = `biru-web-${BUILD_TIMESTAMP}`;
+
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -14,12 +16,13 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return Promise.allSettled(
         STATIC_ASSETS.map((url) => cache.add(url).catch((err) => console.warn('SW cache miss for', url, err)))
       );
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
@@ -29,12 +32,19 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[SW] Purgando cache anterior:', key);
             return caches.delete(key);
           }
         })
       );
     }).then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {
@@ -45,17 +55,38 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // No interceptar endpoints de la API (siempre frescos desde el backend)
-  if (url.pathname.startsWith('/api/')) {
+  // No interceptar endpoints de la API (siempre en vivo desde el backend con red directa)
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('hosted.app')) {
     return;
   }
 
-  // Videos (como Biru.mp4 y Presentacion.mp4): no cachear por SW para evitar problemas de streaming/range requests
+  // Videos: streaming directo, no cachear
   if (url.pathname.endsWith('.mp4')) {
     return;
   }
 
-  // Imágenes estáticas y PWA icons: Stale-While-Revalidate
+  // Para navegación (HTML principal / index.html): Network-First con fallback a cache
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-cache' })
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+            return caches.match('/index.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // Imágenes y logos estáticos: Stale-While-Revalidate
   if (url.pathname.endsWith('.png') || url.pathname.endsWith('.jpg') || url.pathname.endsWith('.svg') || url.pathname.endsWith('.webp')) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) => {
@@ -75,24 +106,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Para navegación y assets HTML/JS/CSS: Network-first con fallback a cache
+  // Para scripts y estilos con hash (assets de Vite) y otros recursos: Cache-first con fallback a network
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {
           const copy = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         }
         return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(event.request).then((cached) => {
-          if (cached) return cached;
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-          return new Response('Sin conexión', { status: 503, statusText: 'Offline' });
-        });
-      })
+      });
+    })
   );
 });
