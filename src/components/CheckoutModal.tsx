@@ -176,6 +176,43 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }
   })();
 
+  // ── Historial de Direcciones (máx. 5, ordenadas por último uso) ──────────────
+  interface DireccionGuardada {
+    id: string;
+    alias?: string;
+    direccion: string;
+    apartamento?: string;
+    google_maps_url?: string;
+    latitud?: number;
+    longitud?: number;
+    ultimo_uso: string;
+  }
+
+  const loadDirecciones = (): DireccionGuardada[] => {
+    try {
+      const raw = localStorage.getItem('biru_direcciones_guardadas');
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  };
+
+  const saveDireccion = (dir: Omit<DireccionGuardada, 'id' | 'ultimo_uso'>) => {
+    try {
+      const existing = loadDirecciones();
+      // Deduplicar por texto de dirección (case-insensitive)
+      const sinDupl = existing.filter(
+        d => d.direccion.toLowerCase().trim() !== dir.direccion.toLowerCase().trim()
+      );
+      const nueva: DireccionGuardada = {
+        id: Date.now().toString(36),
+        ...dir,
+        ultimo_uso: new Date().toISOString(),
+      };
+      // Mantener máx. 5 direcciones más recientes
+      const actualizadas = [nueva, ...sinDupl].slice(0, 5);
+      localStorage.setItem('biru_direcciones_guardadas', JSON.stringify(actualizadas));
+    } catch {}
+  };
+
   const [tipoEntrega, setTipoEntrega] = useState<'delivery' | 'takeaway'>('delivery');
   const permiteDelivery = marca?.permite_delivery !== false;
   const permiteTakeaway = marca?.permite_takeaway !== false;
@@ -216,6 +253,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
   const debounceRef = React.useRef<any>(null);
   const sugerenciasRef = React.useRef<HTMLDivElement>(null);
+  const [direccionesGuardadas, setDireccionesGuardadas] = useState<DireccionGuardada[]>(() => loadDirecciones());
   
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'tarjeta' | 'transferencia'>('efectivo');
   const [pagaCon, setPagaCon] = useState('');
@@ -543,6 +581,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       };
       try {
         localStorage.setItem('biru_customer_profile', JSON.stringify(customerProfile));
+        // Guardar en historial de direcciones si es un delivery con dirección válida
+        if (tipoEntrega === 'delivery' && direccion.trim()) {
+          saveDireccion({
+            direccion: direccion.trim(),
+            apartamento: apartamento.trim() || undefined,
+            google_maps_url: resolvedGmapsUrl || undefined,
+            latitud: resolvedLat || undefined,
+            longitud: resolvedLon || undefined,
+          });
+          setDireccionesGuardadas(loadDirecciones());
+        }
       } catch {}
 
       const payload = {
@@ -883,7 +932,8 @@ ${lineasItems}
                 onClick={() => {
                   skipDuplicateCheckRef.current = true;
                   setPedidoActivoDetectado(null);
-                  setEnviando(true);
+                  // NO ponemos setEnviando(true) aquí — handleSubmit lo activa él mismo
+                  // Si lo ponemos antes, el guard "if (enviando) return" aborta silenciosamente
                   setTimeout(() => {
                     if (formRef.current) {
                       formRef.current.requestSubmit();
@@ -1105,6 +1155,60 @@ ${lineasItems}
               <div style={{ marginBottom: '8px' }}>
                 <label className="checkout-section-label">Dirección de Entrega en Tacuarembó *</label>
               </div>
+
+              {/* Chips de direcciones guardadas */}
+              {direccionesGuardadas.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', marginBottom: '12px' }}>
+                  {direccionesGuardadas.map((d) => {
+                    const isSelected = direccion.trim().toLowerCase() === d.direccion.toLowerCase().trim();
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => {
+                          setDireccion(d.direccion);
+                          setApartamento(d.apartamento || '');
+                          setGoogleMapsUrl(d.google_maps_url || '');
+                          setLatitud(d.latitud || null);
+                          setLongitud(d.longitud || null);
+                          setSugerencias([]);
+                          setMostrarSugerencias(false);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          padding: '5px 11px',
+                          borderRadius: '20px',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          border: isSelected
+                            ? '1.5px solid #10B981'
+                            : '1.5px solid rgba(255,255,255,0.15)',
+                          background: isSelected
+                            ? 'rgba(16, 185, 129, 0.15)'
+                            : 'rgba(255,255,255,0.05)',
+                          color: isSelected ? '#6ee7b7' : 'rgba(255,255,255,0.65)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          maxWidth: '200px',
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                          textOverflow: 'ellipsis',
+                        }}
+                        title={`${d.direccion}${d.apartamento ? ` (${d.apartamento})` : ''}`}
+                      >
+                        {isSelected
+                          ? <Check size={12} style={{ flexShrink: 0 }} />
+                          : <MapPin size={12} style={{ flexShrink: 0 }} />}
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {d.alias || d.direccion}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               <div className="checkout-fields-grid">
                 <div className="checkout-input-group full-width" style={{ position: 'relative' }}>
