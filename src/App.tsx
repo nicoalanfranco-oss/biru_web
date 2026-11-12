@@ -11,7 +11,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { Footer } from './components/Footer';
 import { ToastNotification, ToastData } from './components/ToastNotification';
 import { ProductoElaborado, ProductoReventa, GrupoOpciones, CartItem, TenantInfo, MarcaInfo } from './types/food';
-import { fetchBiruCatalogo, uploadComprobanteTransferencia, TENANT_INFO, MARCA_INFO, REAL_PLATOS, REAL_REVENTA, REAL_GRUPOS } from './services/api';
+import { fetchBiruCatalogo, getInitialCatalog, uploadComprobanteTransferencia, TENANT_INFO, MARCA_INFO, REAL_PLATOS, REAL_REVENTA, REAL_GRUPOS } from './services/api';
 import { useStructuredData } from './hooks/useStructuredData';
 import { CheckCircle2, Sparkles, Bell, ArrowRight, WifiOff, Paperclip, MessageCircle, Copy, Check, Clock } from 'lucide-react';
 import { triggerHaptic } from './utils/haptics';
@@ -68,11 +68,12 @@ const BANCOS_TRANSFERENCIA = [
 ];
 
 export const App: React.FC = () => {
-  const [tenant, setTenant] = useState<TenantInfo>(TENANT_INFO);
-  const [marca, setMarca] = useState<MarcaInfo>(MARCA_INFO);
-  const [platos, setPlatos] = useState<ProductoElaborado[]>(REAL_PLATOS);
-  const [reventa, setReventa] = useState<ProductoReventa[]>(REAL_REVENTA);
-  const [grupos, setGrupos] = useState<GrupoOpciones[]>(REAL_GRUPOS);
+  const initialCatalog = getInitialCatalog();
+  const [tenant, setTenant] = useState<TenantInfo>(initialCatalog.tenant || TENANT_INFO);
+  const [marca, setMarca] = useState<MarcaInfo>(initialCatalog.marca || MARCA_INFO);
+  const [platos, setPlatos] = useState<ProductoElaborado[]>(initialCatalog.elaborados || REAL_PLATOS);
+  const [reventa, setReventa] = useState<ProductoReventa[]>(initialCatalog.reventa || REAL_REVENTA);
+  const [grupos, setGrupos] = useState<GrupoOpciones[]>(initialCatalog.gruposOpciones || REAL_GRUPOS);
   const [loading, setLoading] = useState<boolean>(false);
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
@@ -137,20 +138,76 @@ export const App: React.FC = () => {
     localStorage.setItem('biru_cart', JSON.stringify(cart));
   }, [cart]);
 
-  // Carga inicial del catálogo desde el backend de Food (Tenant 6, Marca 4)
+  // Sincronización en vivo del catálogo (en arranque, al volver al primer plano, al ganar foco, y periódicamente)
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const data = await fetchBiruCatalogo();
-      setPlatos(data.elaborados);
-      setReventa(data.reventa || []);
-      setGrupos(data.gruposOpciones || []);
-      if (data.tenant) setTenant(data.tenant);
-      if (data.marca) setMarca(data.marca);
-      setLoading(false);
+    let isSubscribed = true;
+
+    const syncCatalog = async (silent = false) => {
+      try {
+        if (!silent) setLoading(true);
+        const data = await fetchBiruCatalogo(true);
+        if (!isSubscribed) return;
+        setPlatos(data.elaborados);
+        setReventa(data.reventa || []);
+        setGrupos(data.gruposOpciones || []);
+        if (data.tenant) setTenant(data.tenant);
+        if (data.marca) setMarca(data.marca);
+      } catch (err) {
+        console.warn('Error sincronizando catálogo en vivo:', err);
+      } finally {
+        if (isSubscribed && !silent) setLoading(false);
+      }
     };
-    load();
+
+    // 1. Carga inicial fresca en segundo plano
+    syncCatalog(false);
+
+    // 2. Al volver a la app (desbloquear pantalla, volver desde WhatsApp, cambiar de app)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncCatalog(true);
+      }
+    };
+
+    // 3. Al ganar foco la ventana
+    const handleFocus = () => {
+      syncCatalog(true);
+    };
+
+    // 4. Al recuperar conexión a internet
+    const handleOnline = () => {
+      syncCatalog(true);
+    };
+
+    // 5. Polling periódico cada 2 minutos mientras la app esté abierta
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        syncCatalog(true);
+      }
+    }, 2 * 60 * 1000);
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      isSubscribed = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('online', handleOnline);
+      clearInterval(interval);
+    };
   }, []);
+
+  // Mantener actualizado el plato que se está personalizando si cambian sus ingredientes o datos en vivo
+  useEffect(() => {
+    if (platoPersonalizando) {
+      const updated = platos.find(p => p.producto_elaborado_id === platoPersonalizando.producto_elaborado_id);
+      if (updated && JSON.stringify(updated) !== JSON.stringify(platoPersonalizando)) {
+        setPlatoPersonalizando(updated);
+      }
+    }
+  }, [platos, platoPersonalizando]);
 
   useStructuredData({ tenant, marca, platos, reventa });
 
