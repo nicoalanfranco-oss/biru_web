@@ -16,6 +16,7 @@ import { useStructuredData } from './hooks/useStructuredData';
 import { CheckCircle2, Sparkles, Bell, ArrowRight, WifiOff, Paperclip, MessageCircle, Copy, Check, Clock } from 'lucide-react';
 import { triggerHaptic } from './utils/haptics';
 import { launchConfetti } from './utils/confetti';
+import { checkAppVersionAndPurge, recordUserActivity, checkInactivityState, sanitizeCartItems } from './utils/versionCheck';
 
 const InstagramIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
   <svg
@@ -138,9 +139,31 @@ export const App: React.FC = () => {
     localStorage.setItem('biru_cart', JSON.stringify(cart));
   }, [cart]);
 
+  // Saneamiento proactivo del carrito: eliminar productos que hayan sido borrados o dados de baja en el menú
+  useEffect(() => {
+    if (platos.length === 0 && reventa.length === 0) return;
+    if (cart.length === 0) return;
+
+    const { validCart, removedCount, removedNames } = sanitizeCartItems(cart, platos, reventa, grupos);
+    if (removedCount > 0) {
+      console.warn(`[CartSanitizer] Se eliminaron ${removedCount} ítems obsoletos del carrito:`, removedNames);
+      setCart(validCart);
+      setToast({
+        id: `cart_sanitize_${Date.now()}`,
+        title: 'Carta actualizada',
+        subtitle: `Se actualizaron productos de tu pedido que ya no están disponibles (${removedNames.join(', ')}).`,
+      });
+    }
+  }, [platos, reventa, grupos]);
+
   // Sincronización en vivo del catálogo (en arranque, al volver al primer plano, al ganar foco, y periódicamente)
   useEffect(() => {
     let isSubscribed = true;
+
+    // Registrar actividad del usuario para control de sesiones inactivas
+    const handleUserTouch = () => recordUserActivity();
+    window.addEventListener('click', handleUserTouch);
+    window.addEventListener('touchstart', handleUserTouch);
 
     const syncCatalog = async (silent = false) => {
       try {
@@ -159,32 +182,58 @@ export const App: React.FC = () => {
       }
     };
 
-    // 1. Carga inicial fresca en segundo plano
+    // 1. Carga inicial fresca en segundo plano y verificación de versión
     syncCatalog(false);
+    checkAppVersionAndPurge().catch(() => {});
 
     // 2. Al volver a la app (desbloquear pantalla, volver desde WhatsApp, cambiar de app)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        const { isStale, shouldHardReload, minutesIdle } = checkInactivityState();
+        recordUserActivity();
+
+        // Si la app quedó abierta desde hace más de 2 horas (ej: desde anoche o días atrás)
+        if (shouldHardReload) {
+          console.warn(`[Inactivity] Sesión abierta hace ${minutesIdle} minutos. Refrescando versión y datos limpios...`);
+          checkAppVersionAndPurge().then(purged => {
+            if (!purged) {
+              syncCatalog(true);
+            }
+          });
+          return;
+        }
+
+        // Si pasaron más de 30 minutos de inactividad
+        if (isStale) {
+          console.log(`[Inactivity] App reanudada tras ${minutesIdle} min de inactividad.`);
+          checkAppVersionAndPurge().catch(() => {});
+        }
+
         syncCatalog(true);
       }
     };
 
     // 3. Al ganar foco la ventana
     const handleFocus = () => {
+      recordUserActivity();
+      checkAppVersionAndPurge().catch(() => {});
       syncCatalog(true);
     };
 
     // 4. Al recuperar conexión a internet
     const handleOnline = () => {
+      setIsOnline(true);
+      checkAppVersionAndPurge().catch(() => {});
       syncCatalog(true);
     };
 
-    // 5. Polling periódico cada 2 minutos mientras la app esté abierta
+    // 5. Polling periódico cada 60 segundos mientras la app esté abierta
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
+        checkAppVersionAndPurge().catch(() => {});
         syncCatalog(true);
       }
-    }, 2 * 60 * 1000);
+    }, 60 * 1000);
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
@@ -192,6 +241,8 @@ export const App: React.FC = () => {
 
     return () => {
       isSubscribed = false;
+      window.removeEventListener('click', handleUserTouch);
+      window.removeEventListener('touchstart', handleUserTouch);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('online', handleOnline);
@@ -523,8 +574,11 @@ export const App: React.FC = () => {
           isOpen={isCheckoutOpen}
           items={cart}
           marca={marca}
+          platosDisponibles={platos}
+          reventaDisponible={reventa}
           onClose={() => setIsCheckoutOpen(false)}
           onOrderSuccess={handleOrderSuccess}
+          onRemoveInvalidItem={handleRemoveItem}
         />
       )}
 

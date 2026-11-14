@@ -2,6 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { checkAppVersionAndPurge } from './utils/versionCheck';
+
+// Verificación inmediata de versión al iniciar
+checkAppVersionAndPurge().catch(() => {});
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
@@ -22,13 +26,15 @@ if ('serviceWorker' in navigator) {
         document.addEventListener('visibilitychange', () => {
           if (document.visibilityState === 'visible') {
             registration.update().catch(() => {});
+            checkAppVersionAndPurge().catch(() => {});
           }
         });
 
-        // Chequeo periódico cada 15 minutos en segundo plano
+        // Chequeo periódico cada 60 segundos en segundo plano
         setInterval(() => {
           registration.update().catch(() => {});
-        }, 15 * 60 * 1000);
+          checkAppVersionAndPurge().catch(() => {});
+        }, 60 * 1000);
 
         // Detectar si hay un nuevo Service Worker instalado
         registration.addEventListener('updatefound', () => {

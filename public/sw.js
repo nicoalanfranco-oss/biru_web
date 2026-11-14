@@ -55,8 +55,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // No interceptar endpoints de la API (siempre en vivo desde el backend con red directa)
-  if (url.pathname.startsWith('/api/') || url.hostname.includes('hosted.app')) {
+  // No interceptar endpoints de la API ni version.json (siempre en vivo desde el backend con red directa)
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('hosted.app') || url.pathname.includes('version.json')) {
     return;
   }
 
