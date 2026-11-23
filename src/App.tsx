@@ -88,6 +88,7 @@ export const App: React.FC = () => {
   const [orderSuccessPedidoId, setOrderSuccessPedidoId] = useState<number | null>(null);
   const [comprobanteUrlSuccess, setComprobanteUrlSuccess] = useState<string | null>(null);
   const [uploadingComprobanteSuccess, setUploadingComprobanteSuccess] = useState<boolean>(false);
+  const [comprobanteErrorSuccess, setComprobanteErrorSuccess] = useState<string | null>(null);
   const [orderWhatsAppUrl, setOrderWhatsAppUrl] = useState<string>('');
   const [orderPaymentMethod, setOrderPaymentMethod] = useState<'efectivo' | 'tarjeta' | 'transferencia' | null>(null);
   const [copiedPrex, setCopiedPrex] = useState<boolean>(false);
@@ -428,12 +429,15 @@ export const App: React.FC = () => {
 
     try {
       setUploadingComprobanteSuccess(true);
+      setComprobanteErrorSuccess(null);
       const res = await uploadComprobanteTransferencia(pedidoId, file);
       if (res.success && res.comprobante_url) {
         setComprobanteUrlSuccess(res.comprobante_url);
+      } else if (!res.success) {
+        setComprobanteErrorSuccess(res.error || 'Error al subir el comprobante. Intentá de nuevo.');
       }
-    } catch (err) {
-      console.warn('Error subiendo comprobante:', err);
+    } catch (err: any) {
+      setComprobanteErrorSuccess(err.message || 'Error al subir el comprobante.');
     } finally {
       setUploadingComprobanteSuccess(false);
     }
@@ -728,7 +732,7 @@ export const App: React.FC = () => {
                   <input
                     id="input-comprobante-success"
                     type="file"
-                    accept="image/*,.pdf"
+                    accept="image/*,image/heic,image/heif,.pdf"
                     style={{ display: 'none' }}
                     onChange={handleUploadComprobante}
                   />
@@ -738,15 +742,22 @@ export const App: React.FC = () => {
                       <span>Comprobante adjuntado con éxito ✓</span>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      disabled={uploadingComprobanteSuccess}
-                      onClick={() => document.getElementById('input-comprobante-success')?.click()}
-                      className="btn-upload-comprobante"
-                    >
-                      <Paperclip size={14} />
-                      <span>{uploadingComprobanteSuccess ? 'Subiendo comprobante...' : 'Adjuntar comprobante de pago'}</span>
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        disabled={uploadingComprobanteSuccess}
+                        onClick={() => { setComprobanteErrorSuccess(null); document.getElementById('input-comprobante-success')?.click(); }}
+                        className="btn-upload-comprobante"
+                      >
+                        <Paperclip size={14} />
+                        <span>{uploadingComprobanteSuccess ? 'Subiendo comprobante...' : 'Adjuntar comprobante de pago'}</span>
+                      </button>
+                      {comprobanteErrorSuccess && (
+                        <p style={{ color: '#EF4444', fontSize: '0.75rem', margin: '4px 0 0', textAlign: 'center' }}>
+                          ⚠️ {comprobanteErrorSuccess}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

@@ -67,6 +67,8 @@ export const MisPedidosView: React.FC<MisPedidosViewProps> = ({
   const [loadingMap, setLoadingMap] = useState<Record<number, boolean>>({});
   const [expandedId, setExpandedId] = useState<number | null>(pedidos[0]?.pedido_id || null);
   const [uploadingId, setUploadingId] = useState<number | null>(null);
+  const [uploadErrorId, setUploadErrorId] = useState<number | null>(null);
+  const [uploadErrorMsg, setUploadErrorMsg] = useState<string | null>(null);
 
   // Cargar detalles de cada pedido activo
   useEffect(() => {
@@ -102,6 +104,8 @@ export const MisPedidosView: React.FC<MisPedidosViewProps> = ({
 
     try {
       setUploadingId(pedidoId);
+      setUploadErrorId(null);
+      setUploadErrorMsg(null);
       triggerHaptic('medium');
       const res = await uploadComprobanteTransferencia(pedidoId, file);
       if (res.success && res.comprobante_url) {
@@ -113,9 +117,13 @@ export const MisPedidosView: React.FC<MisPedidosViewProps> = ({
             [pedidoId]: { ...current, comprobante_url: res.comprobante_url },
           };
         });
+      } else if (!res.success) {
+        setUploadErrorId(pedidoId);
+        setUploadErrorMsg(res.error || 'Error al subir. Intentá de nuevo.');
       }
-    } catch (err) {
-      console.warn('Error subiendo comprobante:', err);
+    } catch (err: any) {
+      setUploadErrorId(pedidoId);
+      setUploadErrorMsg(err.message || 'Error al subir el comprobante.');
     } finally {
       setUploadingId(null);
     }
@@ -347,12 +355,17 @@ export const MisPedidosView: React.FC<MisPedidosViewProps> = ({
                                 )}
                                 <input
                                   type="file"
-                                  accept="image/*,application/pdf"
+                                  accept="image/*,image/heic,image/heif,.pdf"
                                   hidden
                                   disabled={uploadingId === pedido.pedido_id}
                                   onChange={(e) => handleUploadComprobante(pedido.pedido_id, e)}
                                 />
                               </label>
+                              {uploadErrorId === pedido.pedido_id && uploadErrorMsg && (
+                                <p style={{ color: '#EF4444', fontSize: '0.72rem', margin: '4px 0 0', width: '100%' }}>
+                                  ⚠️ {uploadErrorMsg}
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>

@@ -648,27 +648,44 @@ export async function searchAddress(query: string, tenantId = 6, ciudadBias = 'T
   return [];
 }
 
+import { procesarComprobante } from '../utils/imageCompressor';
+
 export async function uploadComprobanteTransferencia(
   pedidoId: number,
-  file: File
+  fileOrBase64: File | string,
+  fileNameParam?: string
 ): Promise<{ success: boolean; comprobante_url?: string; error?: string }> {
   try {
-    const base64 = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    let base64 = '';
+    let filename = fileNameParam || 'comprobante.jpg';
+    let mimeType = 'image/jpeg';
+
+    if (typeof fileOrBase64 === 'string') {
+      base64 = fileOrBase64;
+      if (base64.startsWith('data:application/pdf')) {
+        mimeType = 'application/pdf';
+        filename = fileNameParam || 'comprobante.pdf';
+      }
+    } else {
+      const procesado = await procesarComprobante(fileOrBase64);
+      base64 = procesado.base64;
+      filename = procesado.filename;
+      mimeType = procesado.mimeType;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     const res = await fetch(`${FOOD_BACKEND_URL}/api/public/pedidos/${pedidoId}/comprobante`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         base64,
-        filename: file.name,
-        mimeType: file.type || 'image/jpeg',
+        filename,
+        mimeType,
       }),
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -679,6 +696,9 @@ export async function uploadComprobanteTransferencia(
     return { success: true, comprobante_url: data.comprobante_url };
   } catch (err: any) {
     console.error('Error al subir comprobante a Food backend:', err);
-    return { success: false, error: err.message || 'Error de red' };
+    if (err.name === 'AbortError') {
+      return { success: false, error: 'Tiempo de espera agotado al subir el comprobante. Verificá tu conexión.' };
+    }
+    return { success: false, error: err.message || 'Error de conexión' };
   }
 }

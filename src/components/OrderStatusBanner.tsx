@@ -99,6 +99,7 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
   const [visible, setVisible] = useState(() => initialCache.length > 0);
   const [animatingOut, setAnimatingOut] = useState(false);
   const [uploadingComprobante, setUploadingComprobante] = useState(false);
+  const [comprobanteError, setComprobanteError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevCountRef = useRef<number>(initialCache.length);
@@ -325,10 +326,12 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
     if (!file || !currentPedido) return;
 
     setUploadingComprobante(true);
+    setComprobanteError(null);
     const res = await uploadComprobanteTransferencia(currentPedido.pedido_id, file);
     setUploadingComprobante(false);
 
     if (res.success && res.comprobante_url) {
+      setComprobanteError(null);
       setPedidos(prev =>
         prev.map(p =>
           p.pedido_id === currentPedido.pedido_id
@@ -336,6 +339,8 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
             : p
         )
       );
+    } else if (!res.success) {
+      setComprobanteError(res.error || 'Error al subir. Intentá de nuevo.');
     }
   };
 
@@ -418,7 +423,7 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
                   <input
                     type="file"
                     ref={fileInputRef}
-                    accept="image/*,.pdf"
+                    accept="image/*,image/heic,image/heif,.pdf"
                     style={{ display: 'none' }}
                     onChange={handleFileChange}
                   />
@@ -440,7 +445,7 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
                       </a>
                       <button
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => { setComprobanteError(null); fileInputRef.current?.click(); }}
                         className="osb-comprobante-change"
                         title="Cambiar archivo"
                       >
@@ -448,15 +453,22 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="osb-comprobante-btn"
-                      title="Adjuntar comprobante de transferencia"
-                    >
-                      <Paperclip size={12} />
-                      <span>Adjuntar comprobante</span>
-                    </button>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => { setComprobanteError(null); fileInputRef.current?.click(); }}
+                        className="osb-comprobante-btn"
+                        title="Adjuntar comprobante de transferencia"
+                      >
+                        <Paperclip size={12} />
+                        <span>Adjuntar comprobante</span>
+                      </button>
+                      {comprobanteError && (
+                        <p style={{ color: '#EF4444', fontSize: '0.7rem', margin: '3px 0 0', maxWidth: '200px' }}>
+                          ⚠️ {comprobanteError}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
