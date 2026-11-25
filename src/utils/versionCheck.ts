@@ -1,10 +1,49 @@
 import { CartItem, ProductoElaborado, ProductoReventa, GrupoOpciones } from '../types/food';
 
-const LOCAL_BUILD_TIME_KEY = 'biru_client_app_build_time';
-const LOCAL_VERSION_KEY = 'biru_client_app_version';
+declare const __APP_BUILD_TIME__: string;
+
 const LAST_ACTIVE_KEY = 'biru_last_active_time';
+const UPDATE_ATTEMPT_KEY = 'biru_update_attempt_v1';
 const INACTIVITY_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutos de inactividad
 const HARD_REFRESH_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 horas (sesión del día anterior)
+const CHECK_COOLDOWN_MS = 10 * 1000; // Evitar ráfagas simultáneas de version.json
+const RETRY_SAME_BUILD_COOLDOWN_MS = 2 * 60 * 1000; // Evitar loop si el CDN aún propaga el nuevo index.html
+
+let inFlightVersionCheck: Promise<boolean> | null = null;
+let lastCheckTimestamp = 0;
+let reloadInProgress = false;
+
+/**
+ * Devuelve el timestamp exacto compilado dentro de este bundle JS.
+ */
+export function getCurrentBundleBuildTime(): number {
+  try {
+    return Number(__APP_BUILD_TIME__) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Indica si ya hay una recarga por actualización en curso (usado para coordinar con SW controllerchange).
+ */
+export function isAppReloading(): boolean {
+  return reloadInProgress;
+}
+
+/**
+ * Limpia el parámetro ?_app_v=... de la barra de direcciones después de una recarga cache-busted.
+ */
+export function cleanVersionQueryParam(): void {
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('_app_v')) {
+      url.searchParams.delete('_app_v');
+      const cleanUrl = url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '') + url.hash;
+      window.history.replaceState(null, '', cleanUrl || '/');
+    }
+  } catch {}
+}
 
 /**
  * Registra la última interacción del usuario para detectar sesiones abandonadas.
@@ -40,25 +79,11 @@ export function checkInactivityState(): { isStale: boolean; shouldHardReload: bo
 }
 
 /**
- * Purgador universal: borra Service Workers, Cache API, y cachés locales.
+ * Purga Cache Storage y datos de catálogo cacheados, y actualiza el Service Worker sin dejar la app desprotegida.
  */
-export async function purgeAllCachesAndServiceWorkers(): Promise<void> {
-  console.warn('[CachePurge] Ejecutando purga total de Service Workers y Cache Storage...');
+export async function purgeAllCachesAndServiceWorkers(unregisterSw = false): Promise<void> {
+  console.warn('[CachePurge] Purgando Cache Storage y actualizando Service Worker...');
 
-  // 1. Desregistrar todos los Service Workers
-  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-    try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const reg of registrations) {
-        await reg.unregister();
-        console.log('[CachePurge] SW desregistrado:', reg.scope);
-      }
-    } catch (e) {
-      console.warn('[CachePurge] Error desregistrando SW:', e);
-    }
-  }
-
-  // 2. Eliminar todas las memorias de Cache API
   if (typeof window !== 'undefined' && 'caches' in window) {
     try {
       const keys = await caches.keys();
@@ -69,62 +94,132 @@ export async function purgeAllCachesAndServiceWorkers(): Promise<void> {
     }
   }
 
-  // 3. Limpiar almacenamiento de datos estáticos obsoletos
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) {
+        if (unregisterSw) {
+          await reg.unregister();
+          console.log('[CachePurge] SW desregistrado:', reg.scope);
+        } else {
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+          await reg.update().catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.warn('[CachePurge] Error actualizando SW:', e);
+    }
+  }
+
   try {
     localStorage.removeItem('biru_cached_catalog_v2');
-    sessionStorage.clear();
+    sessionStorage.removeItem('biru_catalogo_cache_v1');
   } catch {}
 }
 
-/**
- * Comprueba si el servidor tiene una versión más nueva que la instalada en el dispositivo.
- * Si detecta una nueva versión, purga toda la memoria y recarga inmediatamente.
- */
-export async function checkAppVersionAndPurge(): Promise<boolean> {
+function shouldSkipReloadForLoopGuard(remoteBuildTime: number): boolean {
   try {
-    const timestamp = Date.now();
-    const res = await fetch(`/version.json?_t=${timestamp}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-      },
-    });
-
-    if (!res.ok) return false;
-
-    const remote = await res.json();
-    const remoteBuildTime = Number(remote.buildTime || 0);
-    const remoteVersion = String(remote.version || '1.0.0');
-
-    const localBuildTime = Number(localStorage.getItem(LOCAL_BUILD_TIME_KEY) || 0);
-    const localVersion = localStorage.getItem(LOCAL_VERSION_KEY);
-
-    // Si es la primera vez que se ejecuta el tracker
-    if (!localBuildTime || !localVersion) {
-      localStorage.setItem(LOCAL_BUILD_TIME_KEY, String(remoteBuildTime));
-      localStorage.setItem(LOCAL_VERSION_KEY, remoteVersion);
-      return false;
-    }
-
-    // Si hay una nueva versión remota
-    if (remoteBuildTime > localBuildTime || (remoteVersion && remoteVersion !== localVersion)) {
-      console.warn(`[VersionCheck] NUEVA VERSIÓN DETECTADA: Remota ${remoteVersion} (${remoteBuildTime}) vs Local ${localVersion} (${localBuildTime}). Actualizando app...`);
-
-      await purgeAllCachesAndServiceWorkers();
-
-      // Guardar la nueva versión antes de reiniciar
-      localStorage.setItem(LOCAL_BUILD_TIME_KEY, String(remoteBuildTime));
-      localStorage.setItem(LOCAL_VERSION_KEY, remoteVersion);
-
-      // Recarga forzada limpia
-      window.location.reload();
+    const raw = sessionStorage.getItem(UPDATE_ATTEMPT_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (
+      Number(parsed?.buildTime) === remoteBuildTime &&
+      Date.now() - Number(parsed?.attemptedAt || 0) < RETRY_SAME_BUILD_COOLDOWN_MS
+    ) {
       return true;
     }
-  } catch (err) {
-    console.warn('[VersionCheck] No se pudo verificar version.json:', err);
-  }
+  } catch {}
   return false;
+}
+
+function markUpdateAttempt(remoteBuildTime: number): void {
+  try {
+    sessionStorage.setItem(
+      UPDATE_ATTEMPT_KEY,
+      JSON.stringify({ buildTime: remoteBuildTime, attemptedAt: Date.now() })
+    );
+  } catch {}
+}
+
+function reloadWithCacheBust(remoteBuildTime: number): void {
+  if (reloadInProgress) return;
+  reloadInProgress = true;
+
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set('_app_v', String(remoteBuildTime));
+    window.location.replace(url.toString());
+  } catch {
+    window.location.reload();
+  }
+}
+
+/**
+ * Comprueba si el servidor tiene un build distinto al compilado dentro de este bundle JS.
+ * Si detecta una nueva versión, purga cachés y recarga saltando caché HTTP.
+ */
+export async function checkAppVersionAndPurge(force = false): Promise<boolean> {
+  // En modo desarrollo local (vite dev) no recargar por version.json estático
+  if ((import.meta as any).env?.DEV) return false;
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return false;
+  if (reloadInProgress) return true;
+
+  const now = Date.now();
+  if (!force && now - lastCheckTimestamp < CHECK_COOLDOWN_MS) {
+    return false;
+  }
+
+  if (inFlightVersionCheck) {
+    return inFlightVersionCheck;
+  }
+
+  inFlightVersionCheck = (async () => {
+    try {
+      lastCheckTimestamp = Date.now();
+      const res = await fetch(`/version.json?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
+      });
+
+      if (!res.ok) return false;
+
+      const remote = await res.json();
+      const remoteBuildTime = Number(remote?.buildTime || 0);
+      const currentBundleBuildTime = getCurrentBundleBuildTime();
+
+      if (!remoteBuildTime || !currentBundleBuildTime) {
+        return false;
+      }
+
+      if (remoteBuildTime !== currentBundleBuildTime) {
+        if (shouldSkipReloadForLoopGuard(remoteBuildTime)) {
+          console.warn('[VersionCheck] Ya se intentó recargar para este build hace unos segundos; esperando propagación de CDN.');
+          return false;
+        }
+
+        console.warn(
+          `[VersionCheck] NUEVA VERSIÓN DETECTADA: Remota (${remoteBuildTime}) vs Bundle actual (${currentBundleBuildTime}). Actualizando PWA...`
+        );
+
+        markUpdateAttempt(remoteBuildTime);
+        await purgeAllCachesAndServiceWorkers(false);
+        reloadWithCacheBust(remoteBuildTime);
+        return true;
+      }
+    } catch (err) {
+      console.warn('[VersionCheck] No se pudo verificar version.json:', err);
+    } finally {
+      inFlightVersionCheck = null;
+    }
+    return false;
+  })();
+
+  return inFlightVersionCheck;
 }
 
 /**
@@ -173,4 +268,3 @@ export function sanitizeCartItems(
     removedNames,
   };
 }
-
