@@ -7,6 +7,7 @@ import {
 import { PedidoActivo, EstadoPedido } from './OrderStatusBanner';
 import { fetchPedidoDetalle, PedidoDetalle, uploadComprobanteTransferencia } from '../services/api';
 import { triggerHaptic } from '../utils/haptics';
+import { formatNumeroComanda } from '../utils/comanda';
 
 interface MisPedidosViewProps {
   pedidos: PedidoActivo[];
@@ -205,7 +206,7 @@ export const MisPedidosView: React.FC<MisPedidosViewProps> = ({
               >
                 <div className="mis-pedidos-card-header-left">
                   <div className="mis-pedidos-badge-orden">
-                    #{pedido.numero_orden}
+                    #{formatNumeroComanda(pedido.numero_orden, 6)}
                   </div>
                   <div>
                     <div className="mis-pedidos-card-title-row">

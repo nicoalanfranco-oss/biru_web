@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChefHat, Bike, CheckCircle2, Package, X, Paperclip, Loader2, Clock, ChevronRight } from 'lucide-react';
 import { FOOD_BACKEND_URL, uploadComprobanteTransferencia } from '../services/api';
+import { formatNumeroComanda } from '../utils/comanda';
 
 export type EstadoPedido = 'esperando_confirmacion' | 'en_cocina' | 'listo' | 'en_camino' | 'abierto';
 
@@ -398,7 +399,7 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
                   onClick={() => setSelectedPedidoId(p.pedido_id)}
                   className={`osb-chip ${isSelected ? 'osb-chip-active' : ''} ${pCfg.colorClass}`}
                 >
-                  <span className="osb-chip-order">#{p.numero_orden}</span>
+                  <span className="osb-chip-order">#{formatNumeroComanda(p.numero_orden, 6)}</span>
                   <span className="osb-chip-status">{pCfg.shortLabel}</span>
                 </button>
               );
@@ -414,7 +415,7 @@ export const OrderStatusBanner: React.FC<OrderStatusBannerProps> = ({ onOpenMisP
           </div>
           <div className="osb-texts">
             <div className="osb-header-meta">
-              <span className="osb-orden">#{currentPedido.numero_orden}{getFirstName() ? ` · ${getFirstName()}` : ''}</span>
+              <span className="osb-orden">#{formatNumeroComanda(currentPedido.numero_orden, 6)}{getFirstName() ? ` · ${getFirstName()}` : ''}</span>
               <span className="osb-tipo-badge">
                 {currentPedido.tipo_pedido === 'delivery' ? 'Delivery 🛵' : 'Take Away 🛍️'}
               </span>

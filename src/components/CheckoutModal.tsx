@@ -7,6 +7,7 @@ import {
 import { CartItem, MarcaInfo, ProductoElaborado, ProductoReventa } from '../types/food';
 import { sendOrderToFood, searchAddress, AddressSuggestion, consultarPedidoActivoPorTelefono } from '../services/api';
 import { launchConfetti } from '../utils/confetti';
+import { formatNumeroComanda } from '../utils/comanda';
 
 const GOOGLE_CLIENT_ID = '713780303554-41bctfqdhvu5nc81sctj1qci2mvekviu.apps.googleusercontent.com';
 
@@ -909,7 +910,7 @@ ${lineasItems}
 
             <p style={{ fontSize: '0.88rem', color: '#9CA3AF', lineHeight: 1.45, margin: '0 0 14px' }}>
               Hola <strong>{nombre.trim() || 'cliente'}</strong>, registramos tu orden{' '}
-              <strong style={{ color: '#F59E0B' }}>#{pedidoActivoDetectado.numero_orden}</strong>
+              <strong style={{ color: '#F59E0B' }}>#{formatNumeroComanda(pedidoActivoDetectado.numero_orden, 6, marca?.nombre)}</strong>
               {pedidoActivoDetectado.minutos_hace != null
                 ? ` hace aprox. ${pedidoActivoDetectado.minutos_hace} min`
                 : ''}{' '}

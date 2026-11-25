@@ -12,6 +12,7 @@ import { Footer } from './components/Footer';
 import { ToastNotification, ToastData } from './components/ToastNotification';
 import { ProductoElaborado, ProductoReventa, GrupoOpciones, CartItem, TenantInfo, MarcaInfo } from './types/food';
 import { fetchBiruCatalogo, getInitialCatalog, uploadComprobanteTransferencia, TENANT_INFO, MARCA_INFO, REAL_PLATOS, REAL_REVENTA, REAL_GRUPOS } from './services/api';
+import { formatNumeroComanda } from './utils/comanda';
 import { useStructuredData } from './hooks/useStructuredData';
 import { CheckCircle2, Sparkles, Bell, ArrowRight, WifiOff, Paperclip, MessageCircle, Copy, Check, Clock } from 'lucide-react';
 import { triggerHaptic } from './utils/haptics';
@@ -650,7 +651,7 @@ export const App: React.FC = () => {
             </div>
 
             <div className="success-hero-block">
-              <span className="success-order-num">Orden #B{orderSuccessNumber}</span>
+              <span className="success-order-num">Orden #{formatNumeroComanda(orderSuccessNumber, tenant, marca?.nombre)}</span>
               <h3 className="success-title">
                 {marca?.estado_atencion && !marca.estado_atencion.abierto_ahora
                   ? '¡Pedido anticipado agendado!'
