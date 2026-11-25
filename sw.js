@@ -1,10 +1,7 @@
-const BUILD_TIMESTAMP = '1795637999029';
+const BUILD_TIMESTAMP = '1795643160107';
 const CACHE_NAME = `biru-web-${BUILD_TIMESTAMP}`;
 
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
   '/pwa-192x192.png',
   '/pwa-512x512.png',
   '/pwa-maskable-192x192.png',
@@ -18,9 +15,20 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        STATIC_ASSETS.map((url) => cache.add(url).catch((err) => console.warn('SW cache miss for', url, err)))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Guardar index.html sin usar caché HTTP como respaldo offline
+      try {
+        const indexReq = new Request('/index.html', { cache: 'no-store' });
+        const indexRes = await fetch(indexReq);
+        if (indexRes && indexRes.ok) {
+          await cache.put('/index.html', indexRes);
+        }
+      } catch (err) {
+        console.warn('[SW] No se pudo pre-cachear index.html:', err);
+      }
+
+      await Promise.allSettled(
+        STATIC_ASSETS.map((url) => cache.add(url).catch((err) => console.warn('[SW] Cache miss for', url, err)))
       );
     })
   );
@@ -47,53 +55,109 @@ self.addEventListener('message', (event) => {
   }
 });
 
+/**
+ * Clona una respuesta si fue redirigida para evitar errores en Safari iOS PWA con mode: 'navigate'.
+ */
+function sanitizeNavigationResponse(response) {
+  if (!response || !response.redirected) {
+    return response;
+  }
+  const cloned = response.clone();
+  return new Response(cloned.body, {
+    status: cloned.status,
+    statusText: cloned.statusText,
+    headers: cloned.headers,
+  });
+}
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Skip non-GET requests and chrome-extension
+  // Skip non-GET requests and non-HTTP(S)
   if (event.request.method !== 'GET' || !url.protocol.startsWith('http')) {
     return;
   }
 
-  // No interceptar endpoints de la API ni version.json (siempre en vivo desde el backend con red directa)
-  if (url.pathname.startsWith('/api/') || url.hostname.includes('hosted.app') || url.pathname.includes('version.json')) {
+  // No interceptar APIs, backends externos ni version.json (siempre directo a red)
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.hostname.includes('hosted.app') ||
+    url.pathname.endsWith('/version.json') ||
+    url.pathname.endsWith('/sw.js')
+  ) {
     return;
   }
 
-  // Videos: streaming directo, no cachear
+  // Videos: streaming directo sin interceptar (range requests)
   if (url.pathname.endsWith('.mp4')) {
     return;
   }
 
-  // Para navegación (HTML principal / index.html): Network-First con fallback a cache
+  // Navegación (HTML / SPA entry): siempre Network-First saltando caché HTTP, con fallback offline a /index.html
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request, { cache: 'no-cache' })
+      fetch(new Request(event.request.url, { cache: 'no-store' }))
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
+          if (networkResponse && networkResponse.ok) {
             const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', copy));
           }
-          return networkResponse;
+          return sanitizeNavigationResponse(networkResponse);
         })
         .catch(() => {
-          return caches.match(event.request).then((cached) => {
-            if (cached) return cached;
-            return caches.match('/index.html');
-          });
+          return caches.match('/index.html');
         })
     );
     return;
   }
 
-  // Imágenes y logos estáticos: Stale-While-Revalidate
-  if (url.pathname.endsWith('.png') || url.pathname.endsWith('.jpg') || url.pathname.endsWith('.svg') || url.pathname.endsWith('.webp')) {
+  // manifest.json: Network-First para reflejar cambios de PWA
+  if (url.pathname.endsWith('/manifest.json')) {
+    event.respondWith(
+      fetch(new Request(event.request.url, { cache: 'no-store' }))
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Assets compilados por Vite con hash en el nombre (/assets/index-XXXX.js, .css): Cache-First seguro
+  if (url.origin === self.location.origin && url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // Imágenes estáticas: Stale-While-Revalidate
+  if (
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.jpeg') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.webp')
+  ) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) => {
         return cache.match(event.request).then((cachedResponse) => {
           const fetchPromise = fetch(event.request)
             .then((networkResponse) => {
-              if (networkResponse && networkResponse.status === 200) {
+              if (networkResponse && networkResponse.ok) {
                 cache.put(event.request, networkResponse.clone());
               }
               return networkResponse;
@@ -106,17 +170,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Para scripts y estilos con hash (assets de Vite) y otros recursos: Cache-first con fallback a network
+  // Resto de recursos (fuentes externas, etc.): Network-First con fallback a cache
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.ok && url.origin === self.location.origin) {
           const copy = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         }
         return networkResponse;
-      });
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });
